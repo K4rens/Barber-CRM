@@ -16,7 +16,28 @@ import {
 } from "./hooks/useBookingFlow";
 import { ApiException } from "./api/client";
 
-// ── Стейт формы записи ───────────────────────────────────────
+
+// ── Форматирование телефона ───────────────────────────────────
+
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+
+  const local = digits.startsWith('7') || digits.startsWith('8')
+    ? digits.slice(1)
+    : digits;
+
+  let result = '+7';
+  if (local.length === 0) return result;
+
+  result += ' ' + local.slice(0, 3);
+  if (local.length >= 4) result += ' ' + local.slice(3, 6);
+  if (local.length >= 7) result += '-' + local.slice(6, 8);
+  if (local.length >= 9) result += '-' + local.slice(8, 10);
+
+  return result;
+}
+
+// ── Типы ─────────────────────────────────────────────────────
 
 interface BookingForm {
   barberId: string | null;
@@ -38,9 +59,11 @@ const INITIAL_FORM: BookingForm = {
 
 type Panel = 1 | 2 | 3 | 4;
 
+// ── Компонент ─────────────────────────────────────────────────
+
 export default function App() {
   const [form, setForm] = useState<BookingForm>(INITIAL_FORM);
-  const [openPanel, setOpenPanel] = useState<Panel>(1);
+  const [openPanel, setOpenPanel] = useState<Panel | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
@@ -56,7 +79,7 @@ export default function App() {
     () => {
       setBookingSuccess(true);
       setForm(INITIAL_FORM);
-      setOpenPanel(1);
+      setOpenPanel(null);
     },
     (error: ApiException) => {
       setBookingError(getBookingErrorMessage(error));
@@ -76,32 +99,17 @@ export default function App() {
   };
 
   const toggle = (panel: Panel) =>
-    setOpenPanel((prev) =>
-      prev === panel ? (panel > 1 ? ((panel - 1) as Panel) : panel) : panel,
-    );
+    setOpenPanel((prev) => (prev === panel ? null : panel));
 
   if (bookingSuccess) {
     return (
       <main className="page-main">
         <div className="panels" style={{ gap: 16, alignItems: "flex-start" }}>
-          <h2
-            style={{
-              fontFamily: "Manrope, sans-serif",
-              fontSize: 18,
-              fontWeight: 500,
-            }}
-          >
+          <h2 style={{ fontFamily: "Manrope, sans-serif", fontSize: 18, fontWeight: 500 }}>
             Запись подтверждена ✓
           </h2>
-          <p
-            style={{
-              fontFamily: "Manrope, sans-serif",
-              fontSize: 13,
-              color: "#555",
-            }}
-          >
-            Мы ждём вас. Если планы изменятся — пожалуйста, отмените запись
-            заранее.
+          <p style={{ fontFamily: "Manrope, sans-serif", fontSize: 13, color: "#555" }}>
+            Мы ждём вас. Если планы изменятся — пожалуйста, отмените запись заранее.
           </p>
           <button
             className="book-btn book-btn--active"
@@ -117,6 +125,7 @@ export default function App() {
   return (
     <main className="page-main">
       <div className="panels">
+
         {/* ── 1. Выбор барбера ── */}
         <AccordionPanel
           number={1}
@@ -134,7 +143,6 @@ export default function App() {
                 date: null,
                 time: null,
               }));
-              setOpenPanel(2);
             }}
           />
         </AccordionPanel>
@@ -152,7 +160,6 @@ export default function App() {
             selected={form.serviceId}
             onSelect={(id) => {
               setForm((f) => ({ ...f, serviceId: id, date: null, time: null }));
-              setOpenPanel(3);
             }}
           />
         </AccordionPanel>
@@ -170,12 +177,9 @@ export default function App() {
             serviceId={form.serviceId}
             selectedDate={form.date}
             selectedTime={form.time}
-            onSelectDate={(d) =>
-              setForm((f) => ({ ...f, date: d, time: null }))
-            }
+            onSelectDate={(d) => setForm((f) => ({ ...f, date: d, time: null }))}
             onSelectTime={(t) => {
               setForm((f) => ({ ...f, time: t }));
-              setOpenPanel(4);
             }}
           />
         </AccordionPanel>
@@ -188,53 +192,48 @@ export default function App() {
           disabled={!form.time}
           onToggle={() => toggle(4)}
         >
-          <div
-            style={{
-              padding: "16px 20px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-            }}
-          >
+          <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
             <input
               type="text"
               placeholder="Ваше имя"
               value={form.clientName}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, clientName: e.target.value }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, clientName: e.target.value }))}
               style={inputStyle}
             />
             <input
               type="tel"
-              placeholder="+7 (___) ___-__-__"
+              placeholder="+7 ___ ___-__-__"
               value={form.clientPhone}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, clientPhone: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((f) => ({ ...f, clientPhone: formatPhone(e.target.value) }));
+              }}
+              onFocus={() => {
+                if (!form.clientPhone) {
+                  setForm((f) => ({ ...f, clientPhone: '+7' }));
+                }
+              }}
               style={inputStyle}
             />
           </div>
         </AccordionPanel>
+
       </div>
 
       {/* ── Сообщение об ошибке ── */}
       {bookingError && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 80,
-            right: 36,
-            background: "#fff",
-            border: "1.5px solid #c00",
-            borderRadius: 8,
-            padding: "10px 16px",
-            fontFamily: "Manrope, sans-serif",
-            fontSize: 12,
-            color: "#c00",
-            maxWidth: 280,
-          }}
-        >
+        <div style={{
+          position: "fixed",
+          bottom: 80,
+          right: 36,
+          background: "#fff",
+          border: "1.5px solid #c00",
+          borderRadius: 8,
+          padding: "10px 16px",
+          fontFamily: "Manrope, sans-serif",
+          fontSize: 12,
+          color: "#c00",
+          maxWidth: 280,
+        }}>
           {bookingError}
         </div>
       )}
@@ -254,6 +253,8 @@ export default function App() {
 // ── Стиль инпутов ────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
+  background: 'white',
+  color: 'black',
   width: "100%",
   padding: "10px 12px",
   border: "1.5px solid #ddd",
