@@ -1,31 +1,115 @@
-import "./ServiceList.css";
+// ─────────────────────────────────────────────────────────────
+// components/ServiceList.tsx — услуги из API
+// ─────────────────────────────────────────────────────────────
 
-const SERVICES = [
-  { id: 1, name: "Стрижка машинкой", price: 800 },
-  { id: 2, name: "Стрижка ножницами", price: 1000 },
-  { id: 3, name: "Стрижка + борода", price: 1400 },
-  { id: 4, name: "Оформление бороды", price: 600 },
-  { id: 5, name: "Бритьё опасной бритвой", price: 900 },
-  { id: 6, name: "Камуфляж седины", price: 1200 },
-  { id: 7, name: "Детская стрижка", price: 700 },
-];
+import "./ServiceList.css";
+import { useBarberServices } from "../hooks/useBookingFlow";
+import type { Service } from "../api/types";
 
 interface ServiceListProps {
-  selected: number | null;
-  onSelect: (id: number) => void;
+  barberId: string | null;
+  selected: string | null; // UUID услуги
+  onSelect: (id: string) => void;
 }
 
-export default function ServiceList({ selected, onSelect }: ServiceListProps) {
+// ── Форматирование цены ──────────────────────────────────────
+
+function formatPrice(price: number): string {
+  return `${price.toLocaleString("ru-RU")} ₽`;
+}
+
+// ── Форматирование длительности ──────────────────────────────
+
+function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes} мин`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h} ч ${m} мин` : `${h} ч`;
+}
+
+// ── Скелетон ─────────────────────────────────────────────────
+
+function ServiceSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <li key={i} className="service-item">
+          <span
+            className="service-name skeleton-box"
+            style={{ width: "110px", height: "14px", display: "block" }}
+          />
+          <span
+            className="service-price skeleton-box"
+            style={{ width: "60px", height: "13px", display: "block" }}
+          />
+        </li>
+      ))}
+    </>
+  );
+}
+
+// ── Основной компонент ───────────────────────────────────────
+
+export default function ServiceList({
+  barberId,
+  selected,
+  onSelect,
+}: ServiceListProps) {
+  const {
+    data: services,
+    isLoading,
+    isError,
+    error,
+  } = useBarberServices(barberId);
+
+  if (!barberId) {
+    return <div className="service-list-hint">Сначала выберите барбера</div>;
+  }
+
+  if (isLoading) {
+    return (
+      <ul className="service-list">
+        <ServiceSkeleton />
+      </ul>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="service-list-error">
+        <span>Не удалось загрузить услуги</span>
+        {error instanceof Error && (
+          <span className="service-list-error__detail">{error.message}</span>
+        )}
+      </div>
+    );
+  }
+
+  const active = services?.filter((s: Service) => s.is_active) ?? [];
+
+  if (!active.length) {
+    return (
+      <div className="service-list-error">
+        <span>У барбера нет доступных услуг</span>
+      </div>
+    );
+  }
+
   return (
     <ul className="service-list">
-      {SERVICES.map((s) => (
+      {active.map((s: Service) => (
         <li
-          key={s.id}
-          className={`service-item ${selected === s.id ? "service-item--selected" : ""}`}
-          onClick={() => onSelect(s.id)}
+          key={s.service_id}
+          className={`service-item ${selected === s.service_id ? "service-item--selected" : ""}`}
+          onClick={() => onSelect(s.service_id)}
         >
-          <span className="service-name">{s.name}</span>
-          <span className="service-price">{s.price} ₽</span>
+          <div className="service-item__left">
+            <span className="service-name">{s.name}</span>
+            <span className="service-duration">
+              {formatDuration(s.duration_minutes)}
+            </span>
+          </div>
+          <span className="service-price">{formatPrice(s.price)}</span>
         </li>
       ))}
     </ul>

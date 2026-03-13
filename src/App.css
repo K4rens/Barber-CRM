@@ -12,9 +12,10 @@ html, body {
   color: #000;
   font-family: "Manrope", sans-serif;
 }
-
 #root {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .page {
@@ -26,14 +27,18 @@ html, body {
 }
 
 .page-main {
-  width: 100%;
-  max-width: 520px;
+  flex: 1;
   padding: 48px 20px 100px;
+  display: flex;
+  justify-content: center;
 }
 
 .panels {
-  width: 100%;
+  width: 480px;
+  max-width: 100%;
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex-direction: column;
   gap: 4px;
 }
