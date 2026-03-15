@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// App.tsx — основной компонент с реальным booking-flow
-// ─────────────────────────────────────────────────────────────
-
 import { useState } from "react";
 import "./App.css";
 
@@ -17,7 +13,7 @@ import {
 import { ApiException } from "./api/client";
 
 
-// ── Форматирование телефона ───────────────────────────────────
+//  Форматирование телефона 
 
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '');
@@ -37,7 +33,7 @@ function formatPhone(raw: string): string {
   return result;
 }
 
-// ── Типы ─────────────────────────────────────────────────────
+//Типы 
 
 interface BookingForm {
   barberId: string | null;
@@ -59,8 +55,7 @@ const INITIAL_FORM: BookingForm = {
 
 type Panel = 1 | 2 | 3 | 4;
 
-// ── Компонент ─────────────────────────────────────────────────
-
+//Компонент
 export default function App() {
   const [form, setForm] = useState<BookingForm>(INITIAL_FORM);
   const [openPanel, setOpenPanel] = useState<Panel | null>(null);
@@ -126,7 +121,7 @@ export default function App() {
     <main className="page-main">
       <div className="panels">
 
-        {/* ── 1. Выбор барбера ── */}
+        {/* 1. Выбор барбера */}
         <AccordionPanel
           number={1}
           title="Выбрать барбера"
@@ -147,7 +142,7 @@ export default function App() {
           />
         </AccordionPanel>
 
-        {/* ── 2. Выбор услуги ── */}
+        {/* 2. Выбор услуги */}
         <AccordionPanel
           number={2}
           title="Выбрать услугу"
@@ -164,7 +159,7 @@ export default function App() {
           />
         </AccordionPanel>
 
-        {/* ── 3. Выбор даты и времени ── */}
+        {/*3. Выбор даты и времени*/}
         <AccordionPanel
           number={3}
           title="Дата и время"
@@ -184,7 +179,7 @@ export default function App() {
           />
         </AccordionPanel>
 
-        {/* ── 4. Контактные данные ── */}
+        {/* 4. Контактные данные  */}
         <AccordionPanel
           number={4}
           title="Ваши данные"
@@ -219,7 +214,7 @@ export default function App() {
 
       </div>
 
-      {/* ── Сообщение об ошибке ── */}
+      {/*Сообщение об ошибке*/}
       {bookingError && (
         <div style={{
           position: "fixed",
@@ -238,7 +233,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Кнопка записи ── */}
+      {/*Кнопка записи */}
       <button
         className={`book-btn ${canBook ? "book-btn--active" : ""}`}
         onClick={handleBook}
@@ -250,7 +245,7 @@ export default function App() {
   );
 }
 
-// ── Стиль инпутов ────────────────────────────────────────────
+// Стиль инпутов 
 
 const inputStyle: React.CSSProperties = {
   background: 'white',

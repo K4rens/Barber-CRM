@@ -1,12 +1,8 @@
-// ─────────────────────────────────────────────────────────────
-// components/BookingCalendar.tsx — слоты из API
-// ─────────────────────────────────────────────────────────────
-
 import { useState, useMemo } from "react";
 import type { CSSProperties } from "react";
 import { useFreeSlots } from "../hooks/useBookingFlow";
 
-// ── Константы ────────────────────────────────────────────────
+// Константы 
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const MONTHS = [
@@ -24,7 +20,7 @@ const MONTHS = [
   "Декабрь",
 ];
 
-// ── Стили ─────────────────────────────────────────────────
+//  Стили 
 
 const navBtn: CSSProperties = {
   background: "none",
@@ -42,13 +38,13 @@ const navBtn: CSSProperties = {
   outline: "none",
 };
 
-// ── Хелперы ───────────────────────────────────────────────
+// Хелперы 
 
 function toDateString(date: Date): string {
   return date.toISOString().slice(0, 10); // 'YYYY-MM-DD'
 }
 
-// ── Props ─────────────────────────────────────────────────
+//  Props 
 
 interface Props {
   barberId: string | null;
@@ -59,7 +55,7 @@ interface Props {
   onSelectTime: (isoTime: string) => void;
 }
 
-// ── Компонент ─────────────────────────────────────────────
+// Компонент 
 
 export default function BookingCalendar({
   barberId,
@@ -81,7 +77,7 @@ export default function BookingCalendar({
     isError: slotsError,
   } = useFreeSlots(barberId, dateParam, serviceId ?? undefined);
 
-  // ── Построение сетки календаря ─────────────────────────
+  //  Построение сетки календаря 
 
   const cells = useMemo(() => {
     const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
@@ -119,7 +115,7 @@ export default function BookingCalendar({
     today.getMonth() === month &&
     today.getDate() === d;
 
-  // ── Свободные слоты из API ──────────────────────────────
+  // Свободные слоты из API
 
   const freeSlots = useMemo(
     () => slotsData?.slots.filter((s) => s.status === "free") ?? [],
@@ -175,7 +171,7 @@ export default function BookingCalendar({
           </div>
         ))}
 
-        {/* ── Ячейки дат ── */}
+        {/* Ячейки дат  */}
         {cells.map((day, i) => {
           const past = day ? isPast(day) : false;
           const sel = day ? isSelected(day) : false;
@@ -217,7 +213,7 @@ export default function BookingCalendar({
         })}
       </div>
 
-      {/* ── Слоты времени (из API) ── */}
+      {/*  Слоты времени (из API)  */}
       {selectedDate && (
         <div
           style={{
@@ -239,7 +235,7 @@ export default function BookingCalendar({
             Выберите время
           </div>
 
-          {/* ── Загрузка слотов ── */}
+          {/*  Загрузка слотов  */}
           {slotsLoading && (
             <div
               style={{
@@ -263,21 +259,21 @@ export default function BookingCalendar({
             </div>
           )}
 
-          {/* ── Ошибка загрузки слотов ── */}
+          {/*  Ошибка загрузки слотов  */}
           {slotsError && (
             <div style={{ fontSize: 12, color: "#c00", padding: "8px 0" }}>
               Не удалось загрузить слоты. Попробуйте другую дату.
             </div>
           )}
 
-          {/* ── Нет свободных слотов ── */}
+          {/*  Нет свободных слотов  */}
           {!slotsLoading && !slotsError && freeSlots.length === 0 && (
             <div style={{ fontSize: 12, color: "#999", padding: "8px 0" }}>
               На этот день нет свободных слотов
             </div>
           )}
 
-          {/* ── Сетка слотов из API ── */}
+          {/*  Сетка слотов из API  */}
           {!slotsLoading && !slotsError && freeSlots.length > 0 && (
             <div
               style={{

@@ -1,24 +1,16 @@
-// ─────────────────────────────────────────────────────────────
-// components/ServiceList.tsx — услуги из API
-// ─────────────────────────────────────────────────────────────
-
 import "./ServiceList.css";
 import { useBarberServices } from "../hooks/useBookingFlow";
 import type { Service } from "../api/types";
 
 interface ServiceListProps {
   barberId: string | null;
-  selected: string | null; // UUID услуги
+  selected: string | null;
   onSelect: (id: string) => void;
 }
-
-// ── Форматирование цены ──────────────────────────────────────
 
 function formatPrice(price: number): string {
   return `${price.toLocaleString("ru-RU")} ₽`;
 }
-
-// ── Форматирование длительности ──────────────────────────────
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} мин`;
@@ -26,8 +18,6 @@ function formatDuration(minutes: number): string {
   const m = minutes % 60;
   return m ? `${h} ч ${m} мин` : `${h} ч`;
 }
-
-// ── Скелетон ─────────────────────────────────────────────────
 
 function ServiceSkeleton() {
   return (
@@ -48,7 +38,7 @@ function ServiceSkeleton() {
   );
 }
 
-// ── Основной компонент ───────────────────────────────────────
+// Основной компонент 
 
 export default function ServiceList({
   barberId,

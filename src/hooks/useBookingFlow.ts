@@ -1,14 +1,9 @@
-// ─────────────────────────────────────────────────────────────
-// hooks/useBookingFlow.ts — React Query хуки для клиентского
-// flow: барберы → услуги → слоты → создание записи
-// ─────────────────────────────────────────────────────────────
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { publicApi } from "../api/endpoints";
 import { ApiException } from "../api/client";
 import type { Booking, CreateBookingDto } from "../api/types";
 
-// ── Query Keys ───────────────────────────────────────────────
+// Query Keys
 
 export const qk = {
   barbers: ["barbers"] as const,
@@ -17,7 +12,7 @@ export const qk = {
     ["barbers", id, "free-slots", date, serviceId] as const,
 };
 
-// ── useBarbers ───────────────────────────────────────────────
+//  useBarbers 
 
 export function useBarbers() {
   return useQuery({
@@ -27,7 +22,7 @@ export function useBarbers() {
   });
 }
 
-// ── useBarberServices ────────────────────────────────────────
+//  useBarberServices 
 
 export function useBarberServices(barberId: string | null) {
   return useQuery({
@@ -38,7 +33,7 @@ export function useBarberServices(barberId: string | null) {
   });
 }
 
-// ── useFreeSlots ─────────────────────────────────────────────
+//  useFreeSlots 
 
 export function useFreeSlots(
   barberId: string | null,
@@ -53,7 +48,7 @@ export function useFreeSlots(
   });
 }
 
-// ── useCreateBooking ─────────────────────────────────────────
+//useCreateBooking 
 
 export function useCreateBooking(
   onSuccess?: (data: Booking) => void,
@@ -74,7 +69,7 @@ export function useCreateBooking(
   });
 }
 
-// ── Хелпер: человекочитаемый текст ошибки ───────────────────
+// Хелпер: человекочитаемый текст ошибки 
 
 const ERROR_MESSAGES: Record<string, string> = {
   SLOT_TAKEN: "Это время уже занято. Пожалуйста, выберите другой слот.",
