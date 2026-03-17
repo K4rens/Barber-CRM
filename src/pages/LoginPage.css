@@ -1,0 +1,162 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  background: #fff;
+}
+
+.login-inner {
+  width: 360px;
+  max-width: 100%;
+}
+
+/* Заголовок */
+
+.login-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.login-header__title {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  color: #000;
+}
+
+.login-header__sub {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #bbb;
+}
+
+/* Форма */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-field__label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.login-field__input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-family: "Manrope", sans-serif;
+  font-size: 13px;
+  color: #000;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.login-field__input:focus {
+  border-color: #000;
+}
+
+.login-field__input::placeholder {
+  color: #ccc;
+}
+
+/* Поле пароля */
+
+.login-field__password-wrap {
+  position: relative;
+}
+
+.login-field__password-wrap .login-field__input {
+  padding-right: 44px;
+}
+
+.login-field__eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #bbb;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.login-field__eye:hover {
+  color: #000;
+}
+
+/* Ошибка */
+
+.login-error {
+  font-size: 12px;
+  color: #c00;
+  text-align: center;
+  min-height: 16px;
+}
+
+/* Кнопка */
+
+.login-submit {
+  margin-top: 4px;
+  width: 100%;
+  padding: 13px 20px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.login-submit:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+.login-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Футер */
+
+.login-footer {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e0e0e0;
+  user-select: none;
+}

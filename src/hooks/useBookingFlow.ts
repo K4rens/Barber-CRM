@@ -69,8 +69,6 @@ export function useCreateBooking(
   });
 }
 
-// Хелпер: человекочитаемый текст ошибки 
-
 const ERROR_MESSAGES: Record<string, string> = {
   SLOT_TAKEN: "Это время уже занято. Пожалуйста, выберите другой слот.",
   NOT_FOUND: "Барбер или услуга не найдены.",

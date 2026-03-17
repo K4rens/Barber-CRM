@@ -78,3 +78,17 @@ export const handlers = [
     );
   }),
 ];
+
+
+http.post('/api/v1/auth/login', async ({ request }) => {
+  const body = await request.json() as { login: string; password: string };
+  if (body.login === 'ivan' && body.password === 'secret') {
+    return HttpResponse.json({
+      access_token: 'mock-access-token',
+      refresh_token: 'mock-refresh-token',
+      expires_in: 3600,
+      barber: { barber_id: 'uuid-1', name: 'Артём Волков', services: [] },
+    });
+  }
+  return HttpResponse.json({ code: 'UNAUTHORIZED', message: 'Неверный логин или пароль' }, { status: 401 });
+})

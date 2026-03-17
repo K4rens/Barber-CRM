@@ -1,11 +1,5 @@
 import { http } from "./client";
-import type {
-  Barber,
-  Booking,
-  CreateBookingDto,
-  Service,
-  Slot
-} from "./types";
+import type { Barber, Booking, CreateBookingDto, Service, Slot } from "./types";
 
 // PUBLIC — без авторизации
 
@@ -51,5 +45,21 @@ export const publicApi = {
   createBooking: async (dto: CreateBookingDto): Promise<Booking> => {
     const { data } = await http.post<Booking>("/bookings", dto);
     return data;
+  },
+};
+
+export const authApi = {
+  login: async (login: string, password: string) => {
+    const { data } = await http.post<{
+      access_token: string;
+      refresh_token: string;
+      expires_in: number;
+      barber: import("./types").Barber;
+    }>("/auth/login", { login, password });
+    return data;
+  },
+
+  logout: async (refreshToken: string): Promise<void> => {
+    await http.post("/auth/logout", { refresh_token: refreshToken });
   },
 };
