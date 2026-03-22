@@ -1,0 +1,517 @@
+/* src/staff-styles/bookings.css */
+
+/* ── Шапка страницы ── */
+
+.bookings-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Навигация по неделям/дням ── */
+
+.week-nav { display: flex; align-items: center; gap: 12px; }
+
+.week-nav__btn {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid #000;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.week-nav__btn:hover { background: #000; color: #fff; }
+.week-nav__label { font-size: 13px; font-weight: 500; min-width: 210px; text-align: center; }
+
+/* ── Переключатель вид ── */
+
+.view-tabs {
+  display: flex;
+  gap: 4px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.view-tab {
+  padding: 5px 12px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-tab--active {
+  background: #000;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* ── Недельный вид ── */
+
+.week-calendar {
+  border: 1.5px solid #000;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.week-calendar__head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1.5px solid #000;
+}
+
+.week-day-head {
+  padding: 12px 8px;
+  text-align: center;
+  border-right: 1px solid #efefef;
+}
+
+.week-day-head:last-child { border-right: none; }
+
+.week-day-head__name {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #bbb;
+  margin-bottom: 4px;
+}
+
+.week-day-head__date {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 50%;
+}
+
+.week-day-head--today .week-day-head__date { background: #000; color: #fff; }
+.week-day-head--off .week-day-head__name,
+.week-day-head--off .week-day-head__date { color: #ccc; }
+
+.week-calendar__body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  min-height: 300px;
+}
+
+.day-col {
+  padding: 10px 6px;
+  border-right: 1px solid #efefef;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.day-col:last-child { border-right: none; }
+.day-col--today { background: #fafafa; }
+
+.day-col--off {
+  background: #fafafa;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-col__off-label {
+  font-size: 10px;
+  color: #ccc;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* ── Карточка записи (недельный вид) ── */
+
+.booking-card {
+  border: 1.5px solid #000;
+  border-radius: 7px;
+  padding: 7px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.booking-card:hover { background: #000; }
+.booking-card:hover .booking-card__name,
+.booking-card:hover .booking-card__time { color: #fff; }
+
+.booking-card__name {
+  font-size: 11px;
+  font-weight: 500;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-card__service {
+  font-size: 10px;
+  font-weight: 400;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-card__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.booking-card__time { font-size: 10px; font-weight: 400; color: #888; }
+
+.booking-card__price {
+  font-size: 10px;
+  font-weight: 500;
+  color: #aaa;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.booking-card--completed { border-color: #ccc; background: #fafafa; }
+.booking-card--completed .booking-card__name { color: #888; }
+.booking-card--completed .booking-card__service { color: #aaa; }
+.booking-card--completed .booking-card__price { color: #ccc; }
+
+.booking-card--cancelled { border-color: #eee; opacity: 0.5; }
+
+.booking-card--no-show { border-color: #ccc; background: #fafafa; }
+.booking-card--no-show .booking-card__name { color: #888; }
+.booking-card--no-show .booking-card__service { color: #aaa; }
+.booking-card--no-show .booking-card__price { color: #ccc; }
+
+.booking-card:hover .booking-card__service { color: rgba(255,255,255,0.7); }
+.booking-card:hover .booking-card__price   { color: rgba(255,255,255,0.6); }
+
+/* ── Дневной вид ── */
+
+.day-view {
+  border: 1.5px solid #000;
+  border-radius: 10px;
+  overflow: visible;
+  margin-top: 10px;
+  max-width: 600px;
+}
+
+.day-slot {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  border-bottom: 1px solid #efefef;
+  height: 40px;
+  position: relative;
+}
+
+.day-slot--end {
+  border-bottom: none;
+  height: 20px;
+}
+
+.day-slot__time {
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #bbb;
+  letter-spacing: 0.04em;
+  background: #fff;
+  padding: 0 2px;
+  z-index: 3;
+}
+
+.day-slot__cell {
+  grid-column: 2;
+  padding: 3px 6px;
+  position: relative;
+  border-left: 1px solid #efefef;
+  height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.day-slot--end .day-slot__cell { height: 20px; }
+.day-slot__cell--occupied { background: #fafafa; }
+
+.day-slot__add {
+  width: 100%;
+  height: 34px;
+  background: none;
+  border: 1.5px dashed #ddd;
+  border-radius: 7px;
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  color: #ccc;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.04em;
+}
+
+.day-slot__add:hover {
+  border-color: #000;
+  color: #000;
+  background: #fafafa;
+}
+
+/* ── Карточка записи (дневной вид) ── */
+
+.day-booking-card {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  right: 5px;
+  background: #fff;
+  color: #000;
+  border: 1.5px solid #000;
+  border-radius: 7px;
+  padding: 4px 8px;
+  cursor: pointer;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.day-booking-card:not(.booking-card--completed):not(.booking-card--cancelled):not(.booking-card--no-show):hover {
+  background: #000;
+  color: #fff;
+}
+
+.day-booking-card:not(.booking-card--completed):not(.booking-card--cancelled):not(.booking-card--no-show):hover .day-booking__name,
+.day-booking-card:not(.booking-card--completed):not(.booking-card--cancelled):not(.booking-card--no-show):hover .day-booking__service,
+.day-booking-card:not(.booking-card--completed):not(.booking-card--cancelled):not(.booking-card--no-show):hover .day-booking__meta {
+  color: #fff;
+  opacity: 1;
+}
+
+.day-booking-card.booking-card--completed { background: #fafafa; border-color: #ccc; }
+.day-booking-card.booking-card--cancelled { background: #fff; border-color: #eee; opacity: 0.5; }
+.day-booking-card.booking-card--no-show   { background: #fafafa; border-color: #ccc; }
+
+.day-booking__name {
+  font-size: 11px;
+  font-weight: 500;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.day-booking__service {
+  font-size: 10px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.day-booking__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #aaa;
+}
+
+/* ── Месячный вид ── */
+
+.month-calendar {
+  border: 1.5px solid #000;
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 480px;
+}
+
+.month-head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1.5px solid #000;
+  background: #fafafa;
+}
+
+.month-head__day {
+  padding: 6px;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.month-cell {
+  min-height: 52px;
+  padding: 6px 8px;
+  border-right: 1px solid #efefef;
+  border-bottom: 1px solid #efefef;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.month-cell:nth-child(7n) { border-right: none; }
+.month-cell:hover:not(.month-cell--empty) { background: #f5f5f5; }
+.month-cell--empty { background: #fafafa; cursor: default; }
+.month-cell--past  { opacity: 0.4; }
+
+.month-cell--today .month-cell__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #000;
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 500;
+}
+
+.month-cell__num { font-size: 11px; font-weight: 400; color: #000; }
+
+/* ── Дровер ── */
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 320px;
+  background: #fff;
+  border-left: 1.5px solid #000;
+  z-index: 20;
+  transform: translateX(0);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1.5px solid #efefef;
+}
+
+.drawer__title { font-size: 16px; font-weight: 500; }
+
+.drawer__close {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  font-family: "Manrope", sans-serif;
+}
+
+.drawer__close:hover { border-color: #000; }
+
+.drawer__body {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.drawer__row { display: flex; flex-direction: column; gap: 4px; }
+
+.drawer__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.drawer__value { font-size: 14px; color: #000; }
+
+.drawer__actions {
+  padding: 20px 24px;
+  border-top: 1.5px solid #efefef;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer__status-picker-details { width: 100%; }
+.drawer__status-picker-details > summary { list-style: none; }
+.drawer__status-picker-details > summary::-webkit-details-marker { display: none; }
+
+.drawer__status-picker {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer__picker-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+
+.drawer-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 8px;
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.drawer-btn--complete { background: #000; color: #fff; border: 1.5px solid #000; }
+.drawer-btn--complete:hover { opacity: 0.85; }
+
+.drawer-btn--noshow { background: #fff; color: #888; border: 1.5px solid #ddd; }
+.drawer-btn--noshow:hover { border-color: #000; color: #000; }
+
+.drawer-btn--cancel { background: #fff; color: #c00; border: 1.5px solid #f0d0d0; }
+.drawer-btn--cancel:hover { border-color: #c00; }
+
+.drawer-btn--change { background: #fff; color: #000; border: 1.5px solid #ddd; }
+.drawer-btn--change:hover { border-color: #000; }
+
+.drawer-btn--pending { background: #fff; color: #888; border: 1.5px solid #ddd; }
+.drawer-btn--pending:hover { border-color: #000; color: #000; }
