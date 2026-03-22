@@ -6,9 +6,13 @@ import {
   useNavigate,
   useOutletContext,
 } from "react-router-dom";
+import type { Shift, Template } from "../types/schedule";
+
+import type { Booking, BookingStatus } from "../types/bookings";
+import { MOCK_BOOKINGS } from "../types/bookings";
 import { tokenStorage } from "../../api/client";
 import { authApi } from "../../api/endpoints";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export interface Client {
   id: number;
@@ -26,9 +30,18 @@ const INITIAL_CLIENTS: Client[] = [
   { id: 6, name: "Павел Волков", phone: "+7 925 555-66-77", notes: "" },
 ];
 
+export type ScheduleState = Record<number, Record<number, Shift | null>>;
+
 export type StaffOutletContext = {
   clients: Client[];
   updateNotes: (phone: string, notes: string) => void;
+  schedule: ScheduleState;
+  setSchedule: React.Dispatch<React.SetStateAction<ScheduleState>>;
+  templates: Template[];
+  setTemplates: React.Dispatch<React.SetStateAction<Template[]>>;
+  bookings: Booking[];
+  setBookings: React.Dispatch<React.SetStateAction<Booking[]>>;
+  handleStatusChange: (id: number, status: BookingStatus) => void;
 };
 
 export function useStaffContext() {
@@ -134,6 +147,15 @@ export default function StaffLayout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
 
+  const [schedule, setSchedule] = useState<ScheduleState>({});
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
+
+  const handleStatusChange = (id: number, status: BookingStatus) =>
+    setBookings((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, status } : b)),
+    );
+
   const updateNotes = (phone: string, notes: string) =>
     setClients((prev) =>
       prev.map((c) => (c.phone === phone ? { ...c, notes } : c)),
@@ -210,7 +232,19 @@ export default function StaffLayout() {
       {/* ── Контент страницы ── */}
       <main className="staff-content">
         <Outlet
-          context={{ clients, updateNotes } satisfies StaffOutletContext}
+          context={
+            {
+              clients,
+              updateNotes,
+              schedule,
+              setSchedule,
+              templates,
+              setTemplates,
+              bookings,
+              setBookings,
+              handleStatusChange,
+            } satisfies StaffOutletContext
+          }
         />
       </main>
 

@@ -2,33 +2,24 @@
 
 import { useState } from "react";
 import type { Shift, Template } from "../types/schedule";
-import {
-  DEFAULT_SCHEDULE,
-  DAYS_FULL,
-  DAYS_SHORT,
-  getWeekSchedule,
-} from "../types/schedule";
+import { DAYS_FULL, DAYS_SHORT, getWeekSchedule } from "../types/schedule";
 import { getWeekStart, MONTHS, MONTHS_NOM } from "../types/bookings";
+import { useStaffContext } from "../layout/StaffLayout";
 import ShiftModal from "../components/schedule/ShiftModal";
 import TemplateModal from "../components/schedule/TemplateModal";
 import "../../staff-styles/schedule.css";
 
-interface ScheduleState {
-  [weekOffset: number]: { [dayIndex: number]: Shift | null };
-}
-
 export default function SchedulePage() {
+  const { schedule, setSchedule, templates, setTemplates, bookings } =
+    useStaffContext();
+
   const [weekOffset, setWeekOffset] = useState(0);
-  const [schedule, setSchedule] = useState<ScheduleState>(DEFAULT_SCHEDULE);
-  const [templates, setTemplates] = useState<Template[]>([]);
   const [nextId, setNextId] = useState(1);
   const [showTemplates, setShowTemplates] = useState(false);
-
-  // Модалки
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<
     Template | null | undefined
-  >(undefined); // undefined = закрыта
+  >(undefined);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -46,6 +37,38 @@ export default function SchedulePage() {
 
   const weekSchedule = getWeekSchedule(schedule, weekOffset);
 
+  /** ISO-дата дня по индексу в текущей неделе */
+  const dayIso = (i: number): string => {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    return (
+      d.getFullYear() +
+      "-" +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(d.getDate()).padStart(2, "0")
+    );
+  };
+
+  /** Pending-записи на конкретный день */
+  const pendingBookingsForDay = (i: number) => {
+    const iso = dayIso(i);
+    return bookings.filter((b) => b.date === iso && b.status === "pending");
+  };
+
+  /** Все записи на день (для определения рабочего дня) */
+  const allBookingsForDay = (i: number) => {
+    const iso = dayIso(i);
+    return bookings.filter((b) => b.date === iso);
+  };
+
+  /** День в прошлом */
+  const isPast = (i: number): boolean => {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    return d < today;
+  };
+
   const updateShift = (dayIndex: number, shift: Shift | null) => {
     setSchedule((prev) => ({
       ...prev,
@@ -54,9 +77,13 @@ export default function SchedulePage() {
   };
 
   const applyTemplate = (t: Template) => {
-    const week: { [d: number]: Shift | null } = {};
+    // При применении шаблона пропускаем дни с pending-записями — не перезаписываем их
+    const currentWeek = schedule[weekOffset] ?? {};
+    const week: Record<number, Shift | null> = { ...currentWeek };
     t.days.forEach((shift, i) => {
-      week[i] = shift;
+      if (pendingBookingsForDay(i).length === 0 && !isPast(i)) {
+        week[i] = shift;
+      }
     });
     setSchedule((prev) => ({ ...prev, [weekOffset]: week }));
   };
@@ -106,13 +133,24 @@ export default function SchedulePage() {
           const d = new Date(weekStart);
           d.setDate(weekStart.getDate() + i);
           const isToday = d.getTime() === today.getTime();
-          const shift = weekSchedule[i] !== undefined ? weekSchedule[i] : null;
-          const isActive = shift !== null;
+          const rawShift = weekSchedule[i];
+          const pendingCount = pendingBookingsForDay(i).length;
+          const allCount = allBookingsForDay(i).length;
+          const hasAnyBookings = allCount > 0;
+          // undefined = неделя не тронута; null = явный выходной; Shift = рабочий
+          const isActive =
+            rawShift !== null && (rawShift !== undefined || hasAnyBookings);
+          const shift = rawShift ?? null;
+          const past = isPast(i);
+          // Заблокирован если день в прошлом
+          const blocked = past;
+          // Кнопка неактивна если есть записи
+          const editDisabled = allCount > 0;
 
           return (
             <div
               key={i}
-              className={`schedule-day${isActive ? " schedule-day--active" : ""}${isToday ? " schedule-day--today" : ""}`}
+              className={`schedule-day${isActive ? " schedule-day--active" : ""}${isToday ? " schedule-day--today" : ""}${blocked ? " schedule-day--blocked" : ""}`}
             >
               <div className="schedule-day__name">
                 {DAYS_FULL[i]} <span>{d.getDate()}</span>
@@ -120,25 +158,47 @@ export default function SchedulePage() {
 
               {isActive ? (
                 <>
-                  <div className="schedule-day__hours">
-                    {shift!.start} — {shift!.end}
+                  {shift && (
+                    <div className="schedule-day__hours">
+                      {shift.start} — {shift.end}
+                    </div>
+                  )}
+                  <div className="schedule-day__bookings-note">
+                    {allCount > 0
+                      ? `${allCount} запис${allCount === 1 ? "ь" : allCount < 5 ? "и" : "ей"}`
+                      : "Нет записей"}
                   </div>
-                  <button
-                    className="schedule-day__edit"
-                    onClick={() => setEditingDay(i)}
-                  >
-                    Изменить
-                  </button>
+                  {!blocked && (
+                    <button
+                      className="schedule-day__edit"
+                      onClick={() => !editDisabled && setEditingDay(i)}
+                      disabled={editDisabled}
+                    >
+                      Изменить
+                    </button>
+                  )}
+                  {past && (
+                    <div className="schedule-day__past-note">
+                      Прошедший день
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
                   <div className="schedule-day__off">Выходной</div>
-                  <button
-                    className="schedule-day__add"
-                    onClick={() => setEditingDay(i)}
-                  >
-                    + Сделать рабочим
-                  </button>
+                  {!blocked && (
+                    <button
+                      className="schedule-day__add"
+                      onClick={() => setEditingDay(i)}
+                    >
+                      + Сделать рабочим
+                    </button>
+                  )}
+                  {past && (
+                    <div className="schedule-day__past-note">
+                      Прошедший день
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -231,6 +291,7 @@ export default function SchedulePage() {
               ? weekSchedule[editingDay]
               : null
           }
+          dayBookings={pendingBookingsForDay(editingDay)}
           onSave={(shift) => updateShift(editingDay, shift)}
           onClose={() => setEditingDay(null)}
         />

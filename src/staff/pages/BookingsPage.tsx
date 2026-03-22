@@ -1,13 +1,9 @@
 // src/staff/pages/BookingsPage.tsx
 
 import { useState } from "react";
-import type { Booking, BookingStatus } from "../types/bookings";
-import {
-  MOCK_BOOKINGS,
-  MONTHS,
-  MONTHS_NOM,
-  getWeekStart,
-} from "../types/bookings";
+import type { Booking } from "../types/bookings";
+import { MONTHS, MONTHS_NOM, getWeekStart } from "../types/bookings";
+import { useStaffContext } from "../layout/StaffLayout";
 import WeekView from "../components/bookings/WeekView";
 import DayView from "../components/bookings/DayView";
 import MonthView from "../components/bookings/MonthView";
@@ -69,11 +65,12 @@ function headerMonth(
 }
 
 export default function BookingsPage() {
+  const { bookings, setBookings, handleStatusChange, schedule } =
+    useStaffContext();
   const [view, setView] = useState<View>("week");
   const [weekOffset, setWeekOffset] = useState(0);
   const [dayOffset, setDayOffset] = useState(0);
   const [monthOffset, setMonthOffset] = useState(0);
-  const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
   const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
   const [newBookingTime, setNewBookingTime] = useState<string | undefined>(
     undefined,
@@ -114,10 +111,8 @@ export default function BookingsPage() {
     setView("day");
   };
 
-  const handleStatusChange = (id: number, status: BookingStatus) => {
-    setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status } : b)),
-    );
+  const onStatusChange = (id: number, status: any) => {
+    handleStatusChange(id, status);
     setActiveBooking((prev) => (prev?.id === id ? { ...prev, status } : prev));
   };
 
@@ -191,6 +186,7 @@ export default function BookingsPage() {
         <WeekView
           weekOffset={weekOffset}
           bookings={bookings}
+          schedule={schedule}
           onDayClick={goToDay}
           onBookingClick={setActiveBooking}
         />
@@ -199,6 +195,7 @@ export default function BookingsPage() {
         <DayView
           dayOffset={dayOffset}
           bookings={bookings}
+          schedule={schedule}
           onBookingClick={setActiveBooking}
           onAddSlot={(time, freeSlots, date) => {
             setNewBookingTime(time);
@@ -215,7 +212,7 @@ export default function BookingsPage() {
       <BookingDrawer
         booking={activeBooking}
         onClose={() => setActiveBooking(null)}
-        onStatusChange={handleStatusChange}
+        onStatusChange={onStatusChange}
       />
 
       {showNewBooking && (

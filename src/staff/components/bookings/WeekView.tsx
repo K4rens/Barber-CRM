@@ -11,10 +11,12 @@ import {
   getWeekStart,
   shortName,
 } from "../../types/bookings";
+import type { ScheduleState } from "../../layout/StaffLayout";
 
 interface Props {
   weekOffset: number;
   bookings: Booking[];
+  schedule: ScheduleState;
   onDayClick: (dayIndex: number) => void;
   onBookingClick: (booking: Booking) => void;
 }
@@ -22,6 +24,7 @@ interface Props {
 export default function WeekView({
   weekOffset,
   bookings,
+  schedule,
   onDayClick,
   onBookingClick,
 }: Props) {
@@ -87,7 +90,12 @@ export default function WeekView({
         <div className="week-calendar__head">
           {days.map((d, i) => {
             const isToday = d.getTime() === today.getTime();
-            const isOff = i === 6;
+            const weekScheduleForDay = schedule[weekOffset] ?? {};
+            const shift = weekScheduleForDay[i];
+            // undefined = не задано (используем DEFAULT), null = выходной, Shift = рабочий
+            const hasBookings = dayBookings(days[i]).length > 0;
+            const isOff =
+              shift === null || (shift === undefined && !hasBookings);
             return (
               <div
                 key={i}
@@ -107,7 +115,12 @@ export default function WeekView({
         <div className="week-calendar__body">
           {days.map((_, i) => {
             const isToday = days[i].getTime() === today.getTime();
-            const isOff = i === 6;
+            const weekScheduleForDay = schedule[weekOffset] ?? {};
+            const shift = weekScheduleForDay[i];
+            // undefined = не задано (используем DEFAULT), null = выходной, Shift = рабочий
+            const hasBookings = dayBookings(days[i]).length > 0;
+            const isOff =
+              shift === null || (shift === undefined && !hasBookings);
             const bList = dayBookings(days[i]);
             return (
               <div

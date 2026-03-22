@@ -8,7 +8,9 @@ import {
   DAYS_FULL,
   MONTHS,
   MONTHS_NOM,
+  getWeekStart,
 } from "../../types/bookings";
+import type { ScheduleState } from "../../layout/StaffLayout";
 
 const DAY_START = 8;
 const DAY_END = 21;
@@ -16,6 +18,7 @@ const DAY_END = 21;
 interface Props {
   dayOffset: number;
   bookings: Booking[];
+  schedule: ScheduleState;
   onBookingClick: (b: Booking) => void;
   onAddSlot: (time: string, freeSlots: number, date: string) => void;
 }
@@ -38,6 +41,7 @@ function toLocalIso(d: Date): string {
 export default function DayView({
   dayOffset,
   bookings,
+  schedule,
   onBookingClick,
   onAddSlot,
 }: Props) {
@@ -55,6 +59,26 @@ export default function DayView({
 
   const targetDateIso = toLocalIso(targetDate);
   const isSunday = targetDate.getDay() === 0;
+
+  // Определяем weekOffset и dayIndex для targetDate
+  const todayForSchedule = new Date();
+  todayForSchedule.setHours(0, 0, 0, 0);
+  const targetDay = targetDate.getDay();
+  const diffToMon = targetDay === 0 ? -6 : 1 - targetDay;
+  const targetMon = new Date(targetDate);
+  targetMon.setDate(targetDate.getDate() + diffToMon);
+  const curDay = todayForSchedule.getDay();
+  const curMon = new Date(todayForSchedule);
+  curMon.setDate(todayForSchedule.getDate() + (curDay === 0 ? -6 : 1 - curDay));
+  const targetWeekOffset = Math.round(
+    (targetMon.getTime() - curMon.getTime()) / (7 * 86400000),
+  );
+  const targetDayIndex = targetDay === 0 ? 6 : targetDay - 1;
+  const weekSched = schedule[targetWeekOffset] ?? {};
+  const dayShift = weekSched[targetDayIndex];
+  const hasDayBookings = dayBookings.length > 0;
+  const isDayOff =
+    dayShift === null || (dayShift === undefined && !hasDayBookings);
 
   const label = `${targetDate.getDate()} ${MONTHS[targetDate.getMonth()]}, ${DAYS_FULL[targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1]}`;
   const monthLabel = `${MONTHS_NOM[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
@@ -126,7 +150,7 @@ export default function DayView({
         {label}
       </div>
 
-      {isSunday ? (
+      {isDayOff ? (
         <div
           style={{
             padding: "40px 0",
@@ -136,7 +160,7 @@ export default function DayView({
             fontSize: 13,
           }}
         >
-          Воскресенье — выходной день
+          Выходной день
         </div>
       ) : (
         <div className="day-view">

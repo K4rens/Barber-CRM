@@ -22,6 +22,7 @@
 .schedule-day__name span { font-weight: 300; margin-left: 4px; opacity: 0.5; }
 .schedule-day__hours { font-size: 13px; font-weight: 400; }
 .schedule-day__off   { font-size: 11px; color: #ccc; }
+.schedule-day__bookings-note { font-size: 11px; color: #aaa; }
 
 .schedule-day__edit,
 .schedule-day__add {
@@ -40,6 +41,8 @@
 .schedule-day--today .schedule-day__edit { color: #fff; border-color: rgba(255,255,255,0.4); }
 .schedule-day__edit:hover { border-color: #000; color: #000; }
 .schedule-day--today .schedule-day__edit:hover { background: #fff; color: #000; }
+.schedule-day__edit:disabled { opacity: 0.4; cursor: not-allowed; }
+.schedule-day__edit:disabled:hover { border-color: #ddd; color: #888; }
 
 .schedule-day__add { color: #bbb; border-color: #eee; }
 .schedule-day__add:hover { color: #000; border-color: #000; }
@@ -168,4 +171,15 @@
   gap: 4px;
   cursor: pointer;
   white-space: nowrap;
+}
+.schedule-day--locked {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.schedule-day__lock-reason {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 6px;
+  font-style: italic;
 }

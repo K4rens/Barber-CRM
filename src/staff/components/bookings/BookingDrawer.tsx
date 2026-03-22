@@ -1,5 +1,5 @@
 // src/staff/components/bookings/BookingDrawer.tsx
-
+import React from "react";
 import { useState } from "react";
 import { useStaffContext } from "../../layout/StaffLayout";
 import type { Booking, BookingStatus } from "../../types/bookings";
@@ -195,6 +195,13 @@ export default function BookingDrawer({
     clients.find((c) => c.phone === phone)?.notes ?? "";
   const [showHistory, setShowHistory] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [showStatusPicker, setShowStatusPicker] = useState(false);
+  // Сбрасываем при смене записи
+  const prevIdRef = React.useRef(booking?.id);
+  if (prevIdRef.current !== booking?.id) {
+    prevIdRef.current = booking?.id;
+    setShowStatusPicker(false);
+  }
 
   if (!booking) return null;
 
@@ -299,23 +306,30 @@ export default function BookingDrawer({
         {/* Изменить статус для остальных */}
         {!isPending && (
           <div className="drawer__actions">
-            <details className="drawer__status-picker-details">
-              <summary className="drawer-btn drawer-btn--change">
+            {!showStatusPicker ? (
+              <button
+                className="drawer-btn drawer-btn--change"
+                onClick={() => setShowStatusPicker(true)}
+              >
                 Изменить статус
-              </summary>
-              <div className="drawer__status-picker">
+              </button>
+            ) : (
+              <>
                 <p className="drawer__picker-label">Выберите новый статус</p>
                 {STATUS_LABELS.map((s) => (
                   <button
                     key={s.value}
                     className={`drawer-btn drawer-btn--${s.value === "completed" ? "complete" : s.value === "cancelled" ? "cancel" : s.value === "no_show" ? "noshow" : "change"}`}
-                    onClick={() => onStatusChange(booking.id, s.value)}
+                    onClick={() => {
+                      onStatusChange(booking.id, s.value);
+                      setShowStatusPicker(false);
+                    }}
                   >
                     {s.label}
                   </button>
                 ))}
-              </div>
-            </details>
+              </>
+            )}
           </div>
         )}
       </div>
