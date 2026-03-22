@@ -1,20 +1,21 @@
 import { createBrowserRouter } from "react-router-dom";
-import App from "../App";
+import BarberSelectPage from "../pages/BarberSelectPage";
+import ClientBookingPage from "../pages/ClientBookingPage";
 import LoginPage from "../pages/LoginPage";
-import ProtectedRoute from "./ProtectedRoute.tsx";
 
 const router = createBrowserRouter([
   {
-
     path: "/",
-    element: <App />,
+    element: <BarberSelectPage />,
   },
   {
-
+    path: "/client",
+    element: <ClientBookingPage />,
+  },
+  {
     path: "/login",
     element: <LoginPage />,
   },
-
 ]);
 
 export default router;

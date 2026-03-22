@@ -1,0 +1,56 @@
+/* src/pages/BarberSelectPage.css */
+
+.barber-select-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  background: #fff;
+}
+
+.barber-select-inner {
+  width: 480px;
+  max-width: 100%;
+}
+
+.barber-select-header {
+  margin-bottom: 24px;
+}
+
+.barber-select-header__sub {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #bbb;
+  margin-bottom: 6px;
+}
+
+.barber-select-header__title {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: #000;
+}
+
+.barber-select-list {
+  border: 1.5px solid #000;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.barber-item {
+  cursor: pointer;
+}
+
+.barber-select-arrow {
+  font-size: 11px;
+  color: #ccc;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.barber-item:hover .barber-select-arrow {
+  color: #000;
+}
