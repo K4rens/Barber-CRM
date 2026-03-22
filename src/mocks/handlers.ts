@@ -37,12 +37,10 @@ const BARBERS = [
 ];
 
 export const handlers = [
-  // GET /api/v1/barbers
   http.get("/api/v1/barbers", () => {
     return HttpResponse.json({ barbers: BARBERS });
   }),
 
-  // GET /api/v1/barbers/:id/services
   http.get("/api/v1/barbers/:barber_id/services", ({ params }) => {
     const barber = BARBERS.find((b) => b.barber_id === params.barber_id);
     if (!barber)
@@ -53,7 +51,6 @@ export const handlers = [
     return HttpResponse.json({ services: barber.services });
   }),
 
-  // GET /api/v1/barbers/:id/free-slots
   http.get("/api/v1/barbers/:barber_id/free-slots", () => {
     const slots = Array.from({ length: 8 }, (_, i) => ({
       status: "free",
@@ -63,7 +60,6 @@ export const handlers = [
     return HttpResponse.json({ barber_id: "...", date: "2026-03-20", slots });
   }),
 
-  // POST /api/v1/bookings
   http.post("/api/v1/bookings", async ({ request }) => {
     const body = (await request.json()) as Record<string, string>;
     return HttpResponse.json(
@@ -77,18 +73,21 @@ export const handlers = [
       { status: 201 },
     );
   }),
+
+  // ← внутри массива, не снаружи
+  http.post("/api/v1/auth/login", async ({ request }) => {
+    const body = (await request.json()) as { login: string; password: string };
+    if (body.login === "ivan" && body.password === "secret") {
+      return HttpResponse.json({
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
+        expires_in: 3600,
+        barber: { barber_id: "uuid-1", name: "Артём Волков", services: [] },
+      });
+    }
+    return HttpResponse.json(
+      { code: "UNAUTHORIZED", message: "Неверный логин или пароль" },
+      { status: 401 },
+    );
+  }),
 ];
-
-
-http.post('/api/v1/auth/login', async ({ request }) => {
-  const body = await request.json() as { login: string; password: string };
-  if (body.login === 'ivan' && body.password === 'secret') {
-    return HttpResponse.json({
-      access_token: 'mock-access-token',
-      refresh_token: 'mock-refresh-token',
-      expires_in: 3600,
-      barber: { barber_id: 'uuid-1', name: 'Артём Волков', services: [] },
-    });
-  }
-  return HttpResponse.json({ code: 'UNAUTHORIZED', message: 'Неверный логин или пароль' }, { status: 401 });
-})
