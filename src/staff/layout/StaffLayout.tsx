@@ -1,9 +1,39 @@
 // src/staff/layout/StaffLayout.tsx
 
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import {
+  NavLink,
+  Outlet,
+  useNavigate,
+  useOutletContext,
+} from "react-router-dom";
 import { tokenStorage } from "../../api/client";
 import { authApi } from "../../api/endpoints";
 import { useState } from "react";
+
+export interface Client {
+  id: number;
+  name: string;
+  phone: string;
+  notes: string;
+}
+
+const INITIAL_CLIENTS: Client[] = [
+  { id: 1, name: "Алексей Смирнов", phone: "+7 916 123-45-67", notes: "" },
+  { id: 2, name: "Иван Морозов", phone: "+7 925 321-54-76", notes: "" },
+  { id: 3, name: "Дмитрий Козлов", phone: "+7 903 987-65-43", notes: "" },
+  { id: 4, name: "Сергей Новиков", phone: "+7 916 444-55-66", notes: "" },
+  { id: 5, name: "Михаил Зайцев", phone: "+7 903 777-88-99", notes: "" },
+  { id: 6, name: "Павел Волков", phone: "+7 925 555-66-77", notes: "" },
+];
+
+export type StaffOutletContext = {
+  clients: Client[];
+  updateNotes: (phone: string, notes: string) => void;
+};
+
+export function useStaffContext() {
+  return useOutletContext<StaffOutletContext>();
+}
 import "./StaffLayout.css";
 
 const NAV_ITEMS = [
@@ -102,6 +132,12 @@ const NAV_ITEMS = [
 export default function StaffLayout() {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
+
+  const updateNotes = (phone: string, notes: string) =>
+    setClients((prev) =>
+      prev.map((c) => (c.phone === phone ? { ...c, notes } : c)),
+    );
 
   // Получаем имя барбера из токена (в реальном приложении — из запроса /staff/barber)
   // Пока захардкожено, позже заменим на useProfile()
@@ -115,8 +151,6 @@ export default function StaffLayout() {
     try {
       const refreshToken = tokenStorage.getRefresh();
       if (refreshToken) await authApi.logout(refreshToken);
-    } catch (_) {
-      // игнорируем ошибку при логауте
     } finally {
       tokenStorage.clear();
       navigate("/login");
@@ -175,7 +209,9 @@ export default function StaffLayout() {
 
       {/* ── Контент страницы ── */}
       <main className="staff-content">
-        <Outlet />
+        <Outlet
+          context={{ clients, updateNotes } satisfies StaffOutletContext}
+        />
       </main>
 
       {/* ── Модалка подтверждения выхода ── */}

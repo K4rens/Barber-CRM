@@ -8,27 +8,35 @@ import {
   DAYS_FULL,
   MONTHS,
   MONTHS_NOM,
-  getWeekStart,
 } from "../../types/bookings";
 
 const DAY_START = 8;
-const DAY_END = 16;
+const DAY_END = 21;
 
 interface Props {
-  dayOffset: number; // смещение от сегодня
-  weekOffset: number; // нужен чтобы найти записи по dayOffset в week
+  dayOffset: number;
   bookings: Booking[];
   onBookingClick: (b: Booking) => void;
-  onAddSlot: (time: string, freeSlots: number) => void;
+  onAddSlot: (time: string, freeSlots: number, date: string) => void;
 }
 
 function padTime(h: number, m: number) {
   return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
 }
 
+/** Локальная дата без сдвига UTC */
+function toLocalIso(d: Date): string {
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+}
+
 export default function DayView({
   dayOffset,
-  weekOffset,
   bookings,
   onBookingClick,
   onAddSlot,
@@ -45,12 +53,12 @@ export default function DayView({
     return d;
   }, [today, dayOffset]);
 
-  const weekDayIndex = (targetDate.getDay() + 6) % 7; // 0=Пн
+  const targetDateIso = toLocalIso(targetDate);
+  const isSunday = targetDate.getDay() === 0;
 
   const label = `${targetDate.getDate()} ${MONTHS[targetDate.getMonth()]}, ${DAYS_FULL[targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1]}`;
   const monthLabel = `${MONTHS_NOM[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
 
-  // Слоты 15 мин
   const slots = useMemo(() => {
     const s: string[] = [];
     for (let h = DAY_START; h < DAY_END; h++) {
@@ -60,13 +68,12 @@ export default function DayView({
     return s;
   }, []);
 
-  // Занятые слоты
   const dayBookings = useMemo(
     () =>
       bookings.filter(
-        (b) => b.dayOffset === weekDayIndex && b.status !== "cancelled",
+        (b) => b.date === targetDateIso && b.status !== "cancelled",
       ),
-    [bookings, weekDayIndex],
+    [bookings, targetDateIso],
   );
 
   const occupied = useMemo(() => {
@@ -119,69 +126,84 @@ export default function DayView({
         {label}
       </div>
 
-      <div className="day-view">
-        {slots.map((key, si) => {
-          const isLast = si === slots.length - 1;
-          const booking = occupied[key];
-          const isFirst = booking && !occupied[getPrevKey(key) ?? ""];
+      {isSunday ? (
+        <div
+          style={{
+            padding: "40px 0",
+            textAlign: "center",
+            color: "#bbb",
+            fontFamily: "Manrope, sans-serif",
+            fontSize: 13,
+          }}
+        >
+          Воскресенье — выходной день
+        </div>
+      ) : (
+        <div className="day-view">
+          {slots.map((key, si) => {
+            const isLast = si === slots.length - 1;
+            const booking = occupied[key];
+            const prevBooking = occupied[getPrevKey(key) ?? ""];
+            const isFirst = booking && prevBooking?.id !== booking.id;
 
-          return (
-            <div
-              key={key}
-              className={`day-slot${isLast ? " day-slot--end" : ""}`}
-            >
-              <div className="day-slot__time">{key}</div>
+            return (
               <div
-                className={`day-slot__cell${booking && !isFirst ? " day-slot__cell--occupied" : ""}`}
+                key={key}
+                className={`day-slot${isLast ? " day-slot--end" : ""}`}
               >
-                {!isLast &&
-                  isFirst &&
-                  booking &&
-                  (() => {
-                    const dur = booking.duration || 45;
-                    const slots_count = Math.min(
-                      dur / 15,
-                      (DAY_END * 60 -
-                        parseInt(booking.start.split(":")[0]) * 60 -
-                        parseInt(booking.start.split(":")[1])) /
-                        15,
-                    );
-                    return (
-                      <div
-                        className={`day-booking-card ${STATUS_CLASS[booking.status] || ""}`}
-                        style={{ height: slots_count * 40 - 5 + "px" }}
-                        onClick={() => onBookingClick(booking)}
-                      >
-                        <span className="day-booking__name">
-                          {booking.name.split(" ")[0]}{" "}
-                          {booking.name.split(" ")[1]?.[0]}.
-                        </span>
-                        <span className="day-booking__service">
-                          {booking.service}
-                        </span>
-                        <span className="day-booking__meta">
-                          <span>
-                            {booking.start}
-                            {booking.end ? ` — ${booking.end}` : ""}
+                <div className="day-slot__time">{key}</div>
+                <div
+                  className={`day-slot__cell${booking && !isFirst ? " day-slot__cell--occupied" : ""}`}
+                >
+                  {!isLast &&
+                    isFirst &&
+                    booking &&
+                    (() => {
+                      const dur = booking.duration || 45;
+                      const [bh, bm] = booking.start.split(":").map(Number);
+                      const slotsCount = Math.min(
+                        dur / 15,
+                        (DAY_END * 60 - bh * 60 - bm) / 15,
+                      );
+                      return (
+                        <div
+                          className={`day-booking-card ${STATUS_CLASS[booking.status] || ""}`}
+                          style={{ height: slotsCount * 40 - 5 + "px" }}
+                          onClick={() => onBookingClick(booking)}
+                        >
+                          <span className="day-booking__name">
+                            {booking.name.split(" ")[0]}{" "}
+                            {booking.name.split(" ")[1]?.[0]}.
                           </span>
-                          <span>{PRICE_MAP[booking.service] || ""}</span>
-                        </span>
-                      </div>
-                    );
-                  })()}
-                {!isLast && !booking && (
-                  <button
-                    className="day-slot__add"
-                    onClick={() => onAddSlot(key, getFreeSlots(key))}
-                  >
-                    +
-                  </button>
-                )}
+                          <span className="day-booking__service">
+                            {booking.service}
+                          </span>
+                          <span className="day-booking__meta">
+                            <span>
+                              {booking.start}
+                              {booking.end ? ` — ${booking.end}` : ""}
+                            </span>
+                            <span>{PRICE_MAP[booking.service] || ""}</span>
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  {!isLast && !booking && (
+                    <button
+                      className="day-slot__add"
+                      onClick={() =>
+                        onAddSlot(key, getFreeSlots(key), targetDateIso)
+                      }
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -221,6 +221,7 @@
   border-bottom: 1px solid #efefef;
   height: 40px;
   position: relative;
+  overflow: visible;
 }
 
 .day-slot--end {
@@ -238,7 +239,7 @@
   letter-spacing: 0.04em;
   background: #fff;
   padding: 0 2px;
-  z-index: 3;
+  z-index: 20;
 }
 
 .day-slot__cell {
@@ -250,6 +251,7 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
+  overflow: visible;
 }
 
 .day-slot--end .day-slot__cell { height: 20px; }
@@ -288,7 +290,7 @@
   border-radius: 7px;
   padding: 4px 8px;
   cursor: pointer;
-  z-index: 1;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -458,6 +460,48 @@
 }
 
 .drawer__value { font-size: 14px; color: #000; }
+
+
+.drawer__client-actions {
+  padding: 16px 24px;
+  border-top: 1.5px solid #efefef;
+  display: flex;
+  gap: 8px;
+}
+
+.drawer-client-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fff;
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.drawer-client-btn:hover {
+  border-color: #000;
+  color: #000;
+}
+
+.drawer-client-btn--black {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+
+.drawer-client-btn--black:hover {
+  opacity: 0.85;
+  color: #fff;
+}
 
 .drawer__actions {
   padding: 20px 24px;

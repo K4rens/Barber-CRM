@@ -13,7 +13,7 @@ import BookingsPage from "../staff/pages/BookingsPage";
 import SchedulePage  from "../staff/pages/SchedulePage";
 import ServicesPage from "../staff/pages/ServicesPage";
 import ClientsPage   from "../staff/pages/ClientsPage";
-// import AnalyticsPage from "../staff/pages/AnalyticsPage";
+import AnalyticsPage from "../staff/pages/AnalyticsPage";
 
 const router = createBrowserRouter([
   {
@@ -51,7 +51,7 @@ const router = createBrowserRouter([
       { path: "schedule",  element: <SchedulePage />  },
       { path: "services",  element: <ServicesPage />  },
       { path: "clients",   element: <ClientsPage />   },
-      // { path: "analytics", element: <AnalyticsPage /> },
+      { path: "analytics", element: <AnalyticsPage /> },
     ],
   },
 ]);

@@ -57,10 +57,17 @@ export default function WeekView({
     [weekStart],
   );
 
-  const dayBookings = (dayIndex: number) =>
-    bookings
-      .filter((b) => b.dayOffset === dayIndex)
+  const dayBookings = (dayDate: Date) => {
+    const iso =
+      dayDate.getFullYear() +
+      "-" +
+      String(dayDate.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(dayDate.getDate()).padStart(2, "0");
+    return bookings
+      .filter((b) => b.date === iso)
       .sort((a, b) => a.start.localeCompare(b.start));
+  };
 
   return (
     <div>
@@ -101,7 +108,7 @@ export default function WeekView({
           {days.map((_, i) => {
             const isToday = days[i].getTime() === today.getTime();
             const isOff = i === 6;
-            const bList = dayBookings(i);
+            const bList = dayBookings(days[i]);
             return (
               <div
                 key={i}

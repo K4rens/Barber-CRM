@@ -11,7 +11,7 @@ const SERVICES = [
 ];
 
 const TIME_SLOTS: string[] = [];
-for (let h = 8; h < 16; h++) {
+for (let h = 8; h < 21; h++) {
   for (let m = 0; m < 60; m += 15) {
     TIME_SLOTS.push(
       String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0"),
@@ -39,22 +39,35 @@ function formatDuration(min: number): string {
   return m ? `${h} ч ${m} мин` : `${h} ч`;
 }
 
+/** Локальная ISO-дата без UTC-сдвига */
+function toLocalIso(d: Date): string {
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+}
+
 interface Props {
-  presetTime?: string; // время из слота дневного вида
-  freeSlots?: number; // сколько слотов свободно подряд
+  presetTime?: string;
+  presetDate?: string;
+  freeSlots?: number;
   onClose: () => void;
   onSave: (booking: Omit<Booking, "id">) => void;
 }
 
 export default function NewBookingModal({
   presetTime,
+  presetDate,
   freeSlots,
   onClose,
   onSave,
 }: Props) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(presetDate ?? toLocalIso(new Date()));
   const [time, setTime] = useState(presetTime ?? "");
   const [service, setService] = useState("");
   const [error, setError] = useState("");
@@ -62,13 +75,15 @@ export default function NewBookingModal({
   const maxDurMinutes = freeSlots ? freeSlots * 15 : 999;
   const selectedService = SERVICES.find((s) => s.name === service);
   const duration = selectedService?.duration ?? null;
-
-  // Если время передано из слота — не даём менять
   const timeFixed = !!presetTime;
 
   useEffect(() => {
     if (presetTime) setTime(presetTime);
   }, [presetTime]);
+
+  useEffect(() => {
+    if (presetDate) setDate(presetDate);
+  }, [presetDate]);
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -92,15 +107,19 @@ export default function NewBookingModal({
       return;
     }
 
+    const dur = duration ?? 45;
     const [th, tm] = time.split(":").map(Number);
-    const endTotal = th * 60 + tm + (duration ?? 45);
+    const endTotal = th * 60 + tm + dur;
     const endStr =
       String(Math.floor(endTotal / 60)).padStart(2, "0") +
       ":" +
       String(endTotal % 60).padStart(2, "0");
 
-    const d = new Date(date);
-    const dayOffset = (d.getDay() + 6) % 7; // 0=Пн
+    // date из input[type=date] уже в формате YYYY-MM-DD — парсим без UTC
+    const [y, mo, day] = date.split("-").map(Number);
+    const d = new Date(y, mo - 1, day);
+    const dayOfWeek = d.getDay();
+    const dayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
     onSave({
       dayOffset,
@@ -109,9 +128,9 @@ export default function NewBookingModal({
       service,
       start: time,
       end: endStr,
-      duration: duration ?? 45,
+      duration: dur,
       status: "pending",
-      date,
+      date, // уже локальная строка YYYY-MM-DD
     });
     onClose();
   };
@@ -128,7 +147,6 @@ export default function NewBookingModal({
         </div>
 
         <div className="nb-form">
-          {/* Имя */}
           <div className="nb-field">
             <label className="nb-field__label">Имя клиента</label>
             <input
@@ -140,7 +158,6 @@ export default function NewBookingModal({
             />
           </div>
 
-          {/* Телефон */}
           <div className="nb-field">
             <label className="nb-field__label">Телефон</label>
             <input
@@ -155,7 +172,6 @@ export default function NewBookingModal({
             />
           </div>
 
-          {/* Дата + Время */}
           <div className="nb-row">
             <div className="nb-field">
               <label className="nb-field__label">Дата</label>
@@ -189,7 +205,6 @@ export default function NewBookingModal({
             </div>
           </div>
 
-          {/* Услуга + Длительность */}
           <div className="nb-row">
             <div className="nb-field">
               <label className="nb-field__label">Услуга</label>

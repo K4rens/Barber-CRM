@@ -1,10 +1,9 @@
 // src/staff/pages/BookingsPage.tsx
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import type { Booking, BookingStatus } from "../types/bookings";
 import {
   MOCK_BOOKINGS,
-  DAYS_SHORT,
   MONTHS,
   MONTHS_NOM,
   getWeekStart,
@@ -17,8 +16,6 @@ import NewBookingModal from "../components/bookings/NewBookingModal";
 import "../../staff-styles/bookings.css";
 
 type View = "week" | "day" | "month";
-
-// ── Хелпер: лейбл навигации ──────────────────────────────────
 
 function navLabel(
   view: View,
@@ -44,8 +41,6 @@ function navLabel(
   const target = new Date(t.getFullYear(), t.getMonth() + monthOffset, 1);
   return `${MONTHS_NOM[target.getMonth()]} ${target.getFullYear()}`;
 }
-
-// ── Хелпер: лейбл шапки ──────────────────────────────────────
 
 function headerMonth(
   view: View,
@@ -73,8 +68,6 @@ function headerMonth(
   return `${MONTHS_NOM[target.getMonth()]} ${target.getFullYear()}`;
 }
 
-// ── Компонент ────────────────────────────────────────────────
-
 export default function BookingsPage() {
   const [view, setView] = useState<View>("week");
   const [weekOffset, setWeekOffset] = useState(0);
@@ -85,12 +78,14 @@ export default function BookingsPage() {
   const [newBookingTime, setNewBookingTime] = useState<string | undefined>(
     undefined,
   );
+  const [newBookingDate, setNewBookingDate] = useState<string | undefined>(
+    undefined,
+  );
   const [newBookingFreeSlots, setNewBookingFreeSlots] = useState<
     number | undefined
   >(undefined);
   const [showNewBooking, setShowNewBooking] = useState(false);
 
-  // Навигация
   const navPrev = () => {
     if (view === "week") setWeekOffset((w) => w - 1);
     if (view === "day") setDayOffset((d) => d - 1);
@@ -102,7 +97,6 @@ export default function BookingsPage() {
     if (view === "month") setMonthOffset((m) => m + 1);
   };
 
-  // Переход в день из недели или месяца
   const goToDay = (dayIndex: number) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -120,7 +114,6 @@ export default function BookingsPage() {
     setView("day");
   };
 
-  // Изменение статуса
   const handleStatusChange = (id: number, status: BookingStatus) => {
     setBookings((prev) =>
       prev.map((b) => (b.id === id ? { ...b, status } : b)),
@@ -133,14 +126,12 @@ export default function BookingsPage() {
 
   return (
     <div>
-      {/* Шапка */}
       <div className="staff-page-header">
         <div>
           <p className="staff-page-header__sub">{month}</p>
           <h1 className="staff-page-header__title">Записи</h1>
         </div>
         <div className="bookings-header-right">
-          {/* Навигация */}
           <div className="week-nav">
             <button className="week-nav__btn" onClick={navPrev}>
               &#x276E;
@@ -150,13 +141,44 @@ export default function BookingsPage() {
               &#x276F;
             </button>
           </div>
-          {/* Переключатель вида */}
           <div className="view-tabs">
             {(["day", "week", "month"] as View[]).map((v) => (
               <button
                 key={v}
                 className={`view-tab${view === v ? " view-tab--active" : ""}`}
-                onClick={() => setView(v)}
+                onClick={() => {
+                  if (v === "week") {
+                    const tod = new Date();
+                    tod.setHours(0, 0, 0, 0);
+                    const target = new Date(tod);
+                    target.setDate(tod.getDate() + dayOffset);
+                    const targetDay = target.getDay();
+                    const diffToMon = targetDay === 0 ? -6 : 1 - targetDay;
+                    const targetMon = new Date(target);
+                    targetMon.setDate(target.getDate() + diffToMon);
+                    const curDay = tod.getDay();
+                    const curMon = new Date(tod);
+                    curMon.setDate(
+                      tod.getDate() + (curDay === 0 ? -6 : 1 - curDay),
+                    );
+                    setWeekOffset(
+                      Math.round(
+                        (targetMon.getTime() - curMon.getTime()) /
+                          (7 * 86400000),
+                      ),
+                    );
+                  }
+                  if (v === "month") {
+                    const tod = new Date();
+                    const target = new Date(tod);
+                    target.setDate(tod.getDate() + dayOffset);
+                    setMonthOffset(
+                      (target.getFullYear() - tod.getFullYear()) * 12 +
+                        (target.getMonth() - tod.getMonth()),
+                    );
+                  }
+                  setView(v);
+                }}
               >
                 {v === "day" ? "День" : v === "week" ? "Неделя" : "Месяц"}
               </button>
@@ -165,7 +187,6 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      {/* Контент */}
       {view === "week" && (
         <WeekView
           weekOffset={weekOffset}
@@ -177,11 +198,11 @@ export default function BookingsPage() {
       {view === "day" && (
         <DayView
           dayOffset={dayOffset}
-          weekOffset={weekOffset}
           bookings={bookings}
           onBookingClick={setActiveBooking}
-          onAddSlot={(time, freeSlots) => {
+          onAddSlot={(time, freeSlots, date) => {
             setNewBookingTime(time);
+            setNewBookingDate(date);
             setNewBookingFreeSlots(freeSlots);
             setShowNewBooking(true);
           }}
@@ -191,21 +212,21 @@ export default function BookingsPage() {
         <MonthView monthOffset={monthOffset} onDayClick={goToDate} />
       )}
 
-      {/* Дровер с деталями */}
       <BookingDrawer
         booking={activeBooking}
         onClose={() => setActiveBooking(null)}
         onStatusChange={handleStatusChange}
       />
 
-      {/* Модалка новой записи */}
       {showNewBooking && (
         <NewBookingModal
           presetTime={newBookingTime}
+          presetDate={newBookingDate}
           freeSlots={newBookingFreeSlots}
           onClose={() => {
             setShowNewBooking(false);
             setNewBookingTime(undefined);
+            setNewBookingDate(undefined);
           }}
           onSave={(booking) => {
             setBookings((prev) => [...prev, { ...booking, id: Date.now() }]);

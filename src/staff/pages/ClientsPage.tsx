@@ -1,30 +1,16 @@
 // src/staff/pages/ClientsPage.tsx
 
 import { useState, useMemo } from "react";
+import { useStaffContext } from "../layout/StaffLayout";
+import type { Client } from "../layout/StaffLayout";
 import "../../staff-styles/clients.css";
-
-interface Client {
-  id: number;
-  name: string;
-  phone: string;
-  notes: string;
-}
 
 interface Visit {
   clientId: number;
-  date: string; // 'YYYY-MM-DD'
+  date: string;
   service: string;
   status: "completed" | "cancelled" | "no_show" | "pending";
 }
-
-const INITIAL_CLIENTS: Client[] = [
-  { id: 1, name: "Алексей Смирнов", phone: "+7 916 123-45-67", notes: "" },
-  { id: 2, name: "Иван Морозов", phone: "+7 925 321-54-76", notes: "" },
-  { id: 3, name: "Дмитрий Козлов", phone: "+7 903 987-65-43", notes: "" },
-  { id: 4, name: "Сергей Новиков", phone: "+7 916 444-55-66", notes: "" },
-  { id: 5, name: "Михаил Зайцев", phone: "+7 903 777-88-99", notes: "" },
-  { id: 6, name: "Павел Волков", phone: "+7 925 555-66-77", notes: "" },
-];
 
 const MOCK_VISITS: Visit[] = [
   { clientId: 1, date: "2026-03-20", service: "Стрижка", status: "completed" },
@@ -70,7 +56,7 @@ function formatDate(iso: string) {
   return `${d}.${m}.${y}`;
 }
 
-// ── Модалка истории ──────────────────────────────────────────
+// ── Модалка истории ───────────────────────────────────────────
 
 function HistoryModal({
   client,
@@ -80,7 +66,13 @@ function HistoryModal({
   onClose: () => void;
 }) {
   const [page, setPage] = useState(0);
-  const today = new Date().toISOString().slice(0, 10);
+  const _t = new Date();
+  const today =
+    _t.getFullYear() +
+    "-" +
+    String(_t.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(_t.getDate()).padStart(2, "0");
 
   const visits = useMemo(
     () =>
@@ -91,11 +83,9 @@ function HistoryModal({
     [client.id],
   );
 
-  const totalPages = Math.ceil(visits.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(visits.length / PAGE_SIZE));
   const slice = visits.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
-  // Добиваем до PAGE_SIZE пустыми строками
-  const rows = [...slice];
+  const rows: (Visit | null)[] = [...slice];
   while (rows.length < PAGE_SIZE) rows.push(null);
 
   const count = visits.length;
@@ -161,7 +151,7 @@ function HistoryModal({
   );
 }
 
-// ── Модалка описания ─────────────────────────────────────────
+// ── Модалка описания ──────────────────────────────────────────
 
 function NotesModal({
   client,
@@ -217,13 +207,13 @@ function NotesModal({
   );
 }
 
-// ── Страница ─────────────────────────────────────────────────
+// ── Страница ──────────────────────────────────────────────────
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
+  const { clients, updateNotes } = useStaffContext();
   const [query, setQuery] = useState("");
   const [history, setHistory] = useState<Client | null>(null);
-  const [notes, setNotes] = useState<Client | null>(null);
+  const [notesClient, setNotesClient] = useState<Client | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -233,11 +223,6 @@ export default function ClientsPage() {
         )
       : clients;
   }, [clients, query]);
-
-  const saveNotes = (clientId: number, text: string) =>
-    setClients((prev) =>
-      prev.map((c) => (c.id === clientId ? { ...c, notes: text } : c)),
-    );
 
   return (
     <div>
@@ -276,7 +261,7 @@ export default function ClientsPage() {
             <div className="client-row__actions">
               <button
                 className="row-btn client-btn client-btn--notes"
-                onClick={() => setNotes(c)}
+                onClick={() => setNotesClient(c)}
               >
                 <svg
                   width="14"
@@ -318,11 +303,11 @@ export default function ClientsPage() {
       {history && (
         <HistoryModal client={history} onClose={() => setHistory(null)} />
       )}
-      {notes && (
+      {notesClient && (
         <NotesModal
-          client={notes}
-          onSave={(t) => saveNotes(notes.id, t)}
-          onClose={() => setNotes(null)}
+          client={notesClient}
+          onSave={(notes) => updateNotes(notesClient.phone, notes)}
+          onClose={() => setNotesClient(null)}
         />
       )}
     </div>

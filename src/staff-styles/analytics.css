@@ -1,0 +1,100 @@
+/* src/staff-styles/analytics.css */
+
+.period-tabs {
+  display: flex;
+  gap: 4px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.period-tab {
+  padding: 6px 14px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.period-tab--active { background: #000; color: #fff; font-weight: 500; }
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  border: 1.5px solid #000;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-card__label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.stat-card__value { font-size: 22px; font-weight: 300; letter-spacing: -0.01em; }
+
+.analytics-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.analytics-block {
+  border: 1.5px solid #000;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.analytics-block__title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 16px;
+}
+
+.top-service {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.top-service__name  { font-size: 12px; font-weight: 500; min-width: 130px; }
+
+.top-service__bar {
+  flex: 1;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.top-service__bar div { height: 100%; background: #000; border-radius: 2px; }
+.top-service__count   { font-size: 12px; color: #888; min-width: 24px; text-align: right; }
+
+.booking-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.booking-stat          { display: flex; flex-direction: column; gap: 4px; }
+.booking-stat__label   { font-size: 11px; color: #aaa; }
+.booking-stat__value   { font-size: 20px; font-weight: 300; }
