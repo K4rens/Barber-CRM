@@ -10,7 +10,7 @@ import StaffLayout from "../staff/layout/StaffLayout";
 
 // Страницы кабинета — добавляем по мере готовности
 import BookingsPage from "../staff/pages/BookingsPage";
-// import SchedulePage  from "../staff/pages/SchedulePage";
+import SchedulePage  from "../staff/pages/SchedulePage";
 // import ServicesPage  from "../staff/pages/ServicesPage";
 // import ClientsPage   from "../staff/pages/ClientsPage";
 // import AnalyticsPage from "../staff/pages/AnalyticsPage";
@@ -50,7 +50,7 @@ const router = createBrowserRouter([
         element: <BookingsPage />,
       },
       // Раскомментируем по мере переноса:
-      // { path: "schedule",  element: <SchedulePage />  },
+      { path: "schedule",  element: <SchedulePage />  },
       // { path: "services",  element: <ServicesPage />  },
       // { path: "clients",   element: <ClientsPage />   },
       // { path: "analytics", element: <AnalyticsPage /> },

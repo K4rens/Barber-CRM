@@ -1,0 +1,171 @@
+/* src/staff-styles/schedule.css */
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.schedule-day {
+  border: 1.5px solid #efefef;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schedule-day--active { border-color: #000; }
+.schedule-day--today  { background: #000; color: #fff; }
+
+.schedule-day__name { font-size: 12px; font-weight: 500; }
+.schedule-day__name span { font-weight: 300; margin-left: 4px; opacity: 0.5; }
+.schedule-day__hours { font-size: 13px; font-weight: 400; }
+.schedule-day__off   { font-size: 11px; color: #ccc; }
+
+.schedule-day__edit,
+.schedule-day__add {
+  margin-top: auto;
+  background: none;
+  border: 1.5px solid currentColor;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.schedule-day__edit { color: #888; border-color: #ddd; }
+.schedule-day--today .schedule-day__edit { color: #fff; border-color: rgba(255,255,255,0.4); }
+.schedule-day__edit:hover { border-color: #000; color: #000; }
+.schedule-day--today .schedule-day__edit:hover { background: #fff; color: #000; }
+
+.schedule-day__add { color: #bbb; border-color: #eee; }
+.schedule-day__add:hover { color: #000; border-color: #000; }
+.schedule-day--today .schedule-day__add { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.3); }
+.schedule-day--today .schedule-day__add:hover { color: #fff; border-color: rgba(255,255,255,0.8); }
+
+/* ── Шаблоны ── */
+
+.schedule-templates-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1.5px solid #efefef;
+}
+
+.templates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.template-item {
+  border: 1.5px solid #000;
+  border-radius: 10px;
+  padding: 16px;
+  background: #fff;
+}
+
+.template-days-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.template-day-cell {
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-day-cell--active { background: #fff; border: 1.5px solid #000; }
+.template-day-cell--off    { background: #fafafa; border: 1.5px solid #ddd; }
+
+.template-day-name {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #aaa;
+  letter-spacing: 0.05em;
+}
+
+.template-day-time { font-size: 12px; font-weight: 500; color: #000; }
+.template-day-off  { font-size: 11px; color: #ccc; font-style: italic; }
+
+.template-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  border-top: 1.5px solid #efefef;
+  padding-top: 12px;
+}
+
+.template-btn--right { margin-left: auto; }
+
+.btn {
+  padding: 8px 16px;
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1.5px solid transparent;
+}
+
+.btn--outline { background: transparent; border-color: #000; color: #000; }
+.btn--outline:hover { background: #000; color: #fff; }
+
+.btn--primary { background: #000; border-color: #000; color: #fff; }
+.btn--primary:hover { opacity: 0.8; }
+
+.btn--edit { background: #000; border: 1.5px solid #000; color: #fff; }
+.btn--edit:hover { opacity: 0.8; }
+
+.btn--use { background: #fff; border: 1.5px solid #000; color: #000; }
+.btn--use:hover { background: #000; color: #fff; }
+
+.btn--danger { background: transparent; border-color: #e53935; color: #e53935; }
+.btn--danger:hover { background: #ffebee; }
+
+/* ── Строки шаблона в модалке ── */
+
+.template-day-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #efefef;
+}
+
+.template-day-row:last-child { border-bottom: none; }
+
+.template-day-row .day-name {
+  width: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.template-day-row .time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.off-checkbox {
+  font-size: 12px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
