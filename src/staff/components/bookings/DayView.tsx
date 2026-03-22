@@ -174,7 +174,7 @@ export default function DayView({
                     className="day-slot__add"
                     onClick={() => onAddSlot(key, getFreeSlots(key))}
                   >
-                    + добавить
+                    +
                   </button>
                 )}
               </div>

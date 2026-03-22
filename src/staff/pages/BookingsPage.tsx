@@ -13,6 +13,7 @@ import WeekView from "../components/bookings/WeekView";
 import DayView from "../components/bookings/DayView";
 import MonthView from "../components/bookings/MonthView";
 import BookingDrawer from "../components/bookings/BookingDrawer";
+import NewBookingModal from "../components/bookings/NewBookingModal";
 import "../../staff-styles/bookings.css";
 
 type View = "week" | "day" | "month";
@@ -81,6 +82,13 @@ export default function BookingsPage() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
   const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
+  const [newBookingTime, setNewBookingTime] = useState<string | undefined>(
+    undefined,
+  );
+  const [newBookingFreeSlots, setNewBookingFreeSlots] = useState<
+    number | undefined
+  >(undefined);
+  const [showNewBooking, setShowNewBooking] = useState(false);
 
   // Навигация
   const navPrev = () => {
@@ -172,8 +180,10 @@ export default function BookingsPage() {
           weekOffset={weekOffset}
           bookings={bookings}
           onBookingClick={setActiveBooking}
-          onAddSlot={(_time, _freeSlots) => {
-            // TODO: открыть форму добавления записи
+          onAddSlot={(time, freeSlots) => {
+            setNewBookingTime(time);
+            setNewBookingFreeSlots(freeSlots);
+            setShowNewBooking(true);
           }}
         />
       )}
@@ -187,6 +197,21 @@ export default function BookingsPage() {
         onClose={() => setActiveBooking(null)}
         onStatusChange={handleStatusChange}
       />
+
+      {/* Модалка новой записи */}
+      {showNewBooking && (
+        <NewBookingModal
+          presetTime={newBookingTime}
+          freeSlots={newBookingFreeSlots}
+          onClose={() => {
+            setShowNewBooking(false);
+            setNewBookingTime(undefined);
+          }}
+          onSave={(booking) => {
+            setBookings((prev) => [...prev, { ...booking, id: Date.now() }]);
+          }}
+        />
+      )}
     </div>
   );
 }
