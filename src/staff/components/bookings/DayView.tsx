@@ -76,9 +76,6 @@ export default function DayView({
   const targetDayIndex = targetDay === 0 ? 6 : targetDay - 1;
   const weekSched = schedule[targetWeekOffset] ?? {};
   const dayShift = weekSched[targetDayIndex];
-  const hasDayBookings = dayBookings.length > 0;
-  const isDayOff =
-    dayShift === null || (dayShift === undefined && !hasDayBookings);
 
   const label = `${targetDate.getDate()} ${MONTHS[targetDate.getMonth()]}, ${DAYS_FULL[targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1]}`;
   const monthLabel = `${MONTHS_NOM[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
@@ -99,6 +96,9 @@ export default function DayView({
       ),
     [bookings, targetDateIso],
   );
+
+  const hasDayBookings = dayBookings.length > 0;
+  const isDayOff = dayShift === null || (dayShift === undefined && !hasDayBookings);
 
   const occupied = useMemo(() => {
     const map: Record<string, Booking> = {};

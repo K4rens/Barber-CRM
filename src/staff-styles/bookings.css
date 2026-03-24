@@ -239,7 +239,7 @@
   letter-spacing: 0.04em;
   background: #fff;
   padding: 0 2px;
-  z-index: 20;
+  z-index: 2;
 }
 
 .day-slot__cell {
@@ -290,7 +290,7 @@
   border-radius: 7px;
   padding: 4px 8px;
   cursor: pointer;
-  z-index: 10;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -622,4 +622,91 @@
 
 .nb-submit {
   margin-top: 4px;
+}
+
+/* ════════════════════════════════════════
+   АДАПТИВ bookings.css (≤ 768px)
+   ════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Шапка — в колонку */
+  .bookings-header-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .week-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .week-nav__label {
+    min-width: unset;
+    font-size: 12px;
+  }
+
+  .view-tabs {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .view-tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+  }
+
+  /* Недельный вид — горизонтальный скролл */
+  .week-calendar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .week-calendar__head,
+  .week-calendar__body {
+    grid-template-columns: repeat(7, minmax(100px, 1fr));
+    min-width: 700px;
+  }
+
+  /* Дневной вид — на всю ширину */
+  .day-view {
+    max-width: 100%;
+  }
+
+  /* Месячный вид — на всю ширину */
+  .month-calendar {
+    max-width: 100%;
+  }
+
+  .month-cell {
+    min-height: 40px;
+    padding: 4px 4px;
+  }
+
+  .month-cell__num {
+    font-size: 10px;
+  }
+
+  /* Дровер — на всю ширину снизу */
+  .drawer {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    max-height: 85vh;
+    border-left: none;
+    border-top: 1.5px solid #000;
+    border-radius: 16px 16px 0 0;
+    overflow-y: auto;
+  }
+
+  /* Форма новой записи — колонка */
+  .nb-row {
+    grid-template-columns: 1fr;
+  }
 }
