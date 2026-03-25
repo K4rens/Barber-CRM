@@ -1,6 +1,8 @@
 /* src/staff/layout/StaffLayout.css */
 
-/* ── Layout ── */
+/* ════════════════════════════════════════
+   БАЗОВЫЙ ЛЭЙАУТ
+   ════════════════════════════════════════ */
 
 .staff-app {
   zoom: 1.5;
@@ -23,7 +25,9 @@
   font-size: 15px;
 }
 
-/* ── Десктоп сайдбар ── */
+/* ════════════════════════════════════════
+   ДЕСКТОП САЙДБАР
+   ════════════════════════════════════════ */
 
 .sidebar {
   width: 240px;
@@ -116,7 +120,9 @@
   background: #f5f5f5;
 }
 
-/* ── Nav items (shared desktop/mobile) ── */
+/* ════════════════════════════════════════
+   NAV ITEMS (десктоп сайдбар + мобильное меню)
+   ════════════════════════════════════════ */
 
 .nav-item {
   display: flex;
@@ -154,13 +160,17 @@
   opacity: 1;
 }
 
-/* ── Мобильный топбар (скрыт на десктопе) ── */
+/* ════════════════════════════════════════
+   МОБИЛЬНЫЙ ТОПБАР (скрыт на десктопе)
+   ════════════════════════════════════════ */
 
 .topbar {
   display: none;
 }
 
-/* ── Мобильное меню (скрыто на десктопе) ── */
+/* ════════════════════════════════════════
+   МОБИЛЬНОЕ МЕНЮ (скрыто на десктопе)
+   ════════════════════════════════════════ */
 
 .mobile-overlay {
   display: none;
@@ -170,7 +180,11 @@
   display: none;
 }
 
-/* ── Общие стили модалок ── */
+
+
+/* ════════════════════════════════════════
+   ОБЩИЕ СТИЛИ МОДАЛОК
+   ════════════════════════════════════════ */
 
 .staff-overlay {
   position: fixed;
@@ -235,7 +249,9 @@
   gap: 8px;
 }
 
-/* ── Общие кнопки ── */
+/* ════════════════════════════════════════
+   ОБЩИЕ КНОПКИ
+   ════════════════════════════════════════ */
 
 .staff-btn {
   width: 100%;
@@ -250,14 +266,16 @@
   transition: all 0.15s ease;
 }
 
-.staff-btn--primary { background: #000; color: #fff; border: 1.5px solid #000; }
+.staff-btn--primary  { background: #000; color: #fff; border: 1.5px solid #000; }
 .staff-btn--primary:hover { opacity: 0.85; }
 .staff-btn--secondary { background: #fff; color: #888; border: 1.5px solid #ddd; }
 .staff-btn--secondary:hover { border-color: #000; color: #000; }
 .staff-btn--danger { background: #fff; color: #c00; border: 1.5px solid #f0d0d0; }
 .staff-btn--danger:hover { border-color: #c00; }
 
-/* ── Шапки страниц ── */
+/* ════════════════════════════════════════
+   ШАПКИ СТРАНИЦ
+   ════════════════════════════════════════ */
 
 .staff-page-header {
   display: flex;
@@ -283,11 +301,31 @@
 }
 
 /* ════════════════════════════════════════
-   МОБИЛЬНЫЙ АДАПТИВ (≤ 768px)
+   ПЛАНШЕТ (≤ 1024px) — сайдбар сужается
+   ════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .staff-app {
+    zoom: 1;
+  }
+
+  .sidebar {
+    width: 200px;
+  }
+
+  .staff-content {
+    padding: 40px 36px;
+  }
+}
+
+/* ════════════════════════════════════════
+   МАЛЕНЬКИЙ ПЛАНШЕТ (≤ 768px) — переходим
+   на мобильный лэйаут: топбар + bottom nav
    ════════════════════════════════════════ */
 
 @media (max-width: 768px) {
 
+  /* Лэйаут */
   .staff-app {
     zoom: 1;
     flex-direction: column;
@@ -331,6 +369,7 @@
     align-items: center;
     gap: 8px;
     margin-left: auto;
+    margin-right: 10px;
   }
 
   .topbar__name {
@@ -478,6 +517,8 @@
     padding: 20px 16px;
     min-height: calc(100vh - 52px);
     font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .staff-page-header {
@@ -489,5 +530,20 @@
 
   .staff-page-header__title {
     font-size: 20px;
+  }
+
+}
+
+/* ════════════════════════════════════════
+   МАЛЕНЬКИЙ ТЕЛЕФОН (≤ 390px)
+   ════════════════════════════════════════ */
+
+@media (max-width: 390px) {
+  .staff-content {
+    padding: 16px 12px;
+  }
+
+  .topbar__name {
+    display: none;
   }
 }

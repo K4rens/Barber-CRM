@@ -13,6 +13,7 @@ import { MOCK_BOOKINGS } from "../types/bookings";
 import { tokenStorage } from "../../api/client";
 import { authApi } from "../../api/endpoints";
 import React, { useState } from "react";
+import "./StaffLayout.css";
 
 export interface Client {
   id: number;
@@ -47,7 +48,6 @@ export type StaffOutletContext = {
 export function useStaffContext() {
   return useOutletContext<StaffOutletContext>();
 }
-import "./StaffLayout.css";
 
 const NAV_ITEMS = [
   {
@@ -145,6 +145,7 @@ const NAV_ITEMS = [
 export default function StaffLayout() {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
 
   const [schedule, setSchedule] = useState<ScheduleState>({});
@@ -161,8 +162,6 @@ export default function StaffLayout() {
       prev.map((c) => (c.phone === phone ? { ...c, notes } : c)),
     );
 
-  // Получаем имя барбера из токена (в реальном приложении — из запроса /staff/barber)
-  // Пока захардкожено, позже заменим на useProfile()
   const barberName = "Артём Волков";
   const initials = barberName
     .split(" ")
@@ -179,9 +178,21 @@ export default function StaffLayout() {
     }
   };
 
+  const outletContext = {
+    clients,
+    updateNotes,
+    schedule,
+    setSchedule,
+    templates,
+    setTemplates,
+    bookings,
+    setBookings,
+    handleStatusChange,
+  } satisfies StaffOutletContext;
+
   return (
     <div className="staff-app">
-      {/* ── Сайдбар ── */}
+      {/* ── Десктоп сайдбар ── */}
       <aside className="sidebar">
         <div className="sidebar__top">
           <div className="sidebar__brand">Barber CRM</div>
@@ -229,23 +240,80 @@ export default function StaffLayout() {
         </button>
       </aside>
 
+      {/* ── Мобильный топбар ── */}
+      <header className="topbar">
+        <div className="topbar__brand">Barber CRM</div>
+        <div className="topbar__profile">
+          <span className="topbar__name">{barberName.split(" ")[0]}</span>
+          <div className="topbar__avatar">{initials}</div>
+        </div>
+        <button
+          className={`topbar__burger${mobileMenuOpen ? " topbar__burger--open" : ""}`}
+          onClick={() => setMobileMenuOpen((v) => !v)}
+          aria-label="Меню"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </header>
+
+      {/* ── Мобильное выдвижное меню ── */}
+      {mobileMenuOpen && (
+        <div
+          className="mobile-overlay"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <nav className={`mobile-nav${mobileMenuOpen ? " mobile-nav--open" : ""}`}>
+        <div className="mobile-nav__profile">
+          <div className="mobile-nav__avatar">{initials}</div>
+          <div>
+            <div className="mobile-nav__name">{barberName}</div>
+            <div className="mobile-nav__role">Барбер</div>
+          </div>
+        </div>
+        <div className="mobile-nav__links">
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                "nav-item" + (isActive ? " nav-item--active" : "")
+              }
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="nav-item__icon">{item.icon}</span>
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+        <button
+          className="mobile-nav__logout"
+          onClick={() => {
+            setMobileMenuOpen(false);
+            setShowLogoutConfirm(true);
+          }}
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Выйти
+        </button>
+      </nav>
+
       {/* ── Контент страницы ── */}
       <main className="staff-content">
-        <Outlet
-          context={
-            {
-              clients,
-              updateNotes,
-              schedule,
-              setSchedule,
-              templates,
-              setTemplates,
-              bookings,
-              setBookings,
-              handleStatusChange,
-            } satisfies StaffOutletContext
-          }
-        />
+        <Outlet context={outletContext} />
       </main>
 
       {/* ── Модалка подтверждения выхода ── */}
