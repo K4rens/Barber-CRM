@@ -1,7 +1,3 @@
-// src/pages/ClientBookingPage.tsx
-// Страница записи — /client?barber_id=uuid
-// Барбер уже выбран (из URL), показываем 3 шага: услуга, дата, данные
-
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import "../App.css";
@@ -75,7 +71,6 @@ export default function ClientBookingPage() {
     },
   );
 
-  // Если barber_id не передан — редирект на выбор барбера
   if (!barberId) {
     navigate("/");
     return null;
@@ -136,7 +131,6 @@ export default function ClientBookingPage() {
   return (
     <main className="page-main">
       <div className="panels">
-        {/* 1. Выбор услуги */}
         <AccordionPanel
           number={1}
           title="Выбрать услугу"
@@ -152,7 +146,6 @@ export default function ClientBookingPage() {
           />
         </AccordionPanel>
 
-        {/* 2. Дата и время */}
         <AccordionPanel
           number={2}
           title="Дата и время"
@@ -172,7 +165,6 @@ export default function ClientBookingPage() {
           />
         </AccordionPanel>
 
-        {/* 3. Ваши данные */}
         <AccordionPanel
           number={3}
           title="Ваши данные"

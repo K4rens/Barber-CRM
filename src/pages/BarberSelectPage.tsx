@@ -1,7 +1,3 @@
-// src/pages/BarberSelectPage.tsx
-// Страница выбора барбера — /
-// После выбора редирект на /client?barber_id=uuid
-
 import { useNavigate } from "react-router-dom";
 import { useBarbers } from "../hooks/useBookingFlow";
 import type { Barber } from "../api/types";

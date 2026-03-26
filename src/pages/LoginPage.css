@@ -12,8 +12,6 @@
   max-width: 100%;
 }
 
-/* Заголовок */
-
 .login-header {
   margin-bottom: 24px;
   text-align: center;
@@ -35,8 +33,6 @@
   text-transform: uppercase;
   color: #bbb;
 }
-
-/* Форма */
 
 .login-form {
   display: flex;
@@ -80,8 +76,6 @@
   color: #ccc;
 }
 
-/* Поле пароля */
-
 .login-field__password-wrap {
   position: relative;
 }
@@ -109,16 +103,12 @@
   color: #000;
 }
 
-/* Ошибка */
-
 .login-error {
   font-size: 12px;
   color: #c00;
   text-align: center;
   min-height: 16px;
 }
-
-/* Кнопка */
 
 .login-submit {
   margin-top: 4px;
@@ -146,7 +136,6 @@
   cursor: not-allowed;
 }
 
-/* Футер */
 
 .login-footer {
   position: fixed;
