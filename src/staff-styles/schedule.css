@@ -225,6 +225,32 @@
   .template-actions {
     flex-wrap: wrap;
   }
+
+  /* Строка дня: название + чекбокс в одну строку, время под ними */
+  .template-day-row {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: center;
+    padding: 10px 0;
+  }
+
+  .template-day-row .day-name {
+    flex: 1;
+    width: auto;
+    font-size: 13px;
+  }
+
+  /* Чекбокс — в одну строку с названием, прижат вправо */
+  .off-checkbox {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  /* Поля времени — на всю ширину второй строки */
+  .template-day-row .time-inputs {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 390px) {

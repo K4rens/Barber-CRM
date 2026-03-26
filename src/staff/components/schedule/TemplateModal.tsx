@@ -68,13 +68,7 @@ export default function TemplateModal({ template, onSave, onClose }: Props) {
             ✕
           </button>
         </div>
-        <div
-          style={{
-            padding: "16px 20px 20px",
-            maxHeight: "70vh",
-            overflowY: "auto",
-          }}
-        >
+        <div className="staff-modal__body">
           {days.map((day, i) => (
             <div key={i} className="template-day-row">
               <span className="day-name">{DAYS_FULL[i]}</span>
