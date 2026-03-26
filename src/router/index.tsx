@@ -1,5 +1,3 @@
-// src/router/index.tsx
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import BarberSelectPage from "../pages/BarberSelectPage";
@@ -8,7 +6,6 @@ import LoginPage from "../pages/LoginPage";
 import ProtectedRoute from "./ProtectedRoute";
 import StaffLayout from "../staff/layout/StaffLayout";
 
-// Страницы кабинета — добавляем по мере готовности
 import BookingsPage from "../staff/pages/BookingsPage";
 import SchedulePage  from "../staff/pages/SchedulePage";
 import ServicesPage from "../staff/pages/ServicesPage";
