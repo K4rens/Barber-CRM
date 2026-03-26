@@ -34,12 +34,10 @@ function BarberSkeleton() {
   );
 }
 
-// Основной компонент
 
 export default function BarberList({ selected, onSelect }: BarberListProps) {
   const { data: barbers, isLoading, isError, error } = useBarbers();
-
-  //  Состояние загрузки
+  
   if (isLoading) {
     return (
       <ul className="barber-list">
@@ -48,7 +46,6 @@ export default function BarberList({ selected, onSelect }: BarberListProps) {
     );
   }
 
-  // Состояние ошибки 
   if (isError) {
     return (
       <div className="barber-list-error">
@@ -60,7 +57,6 @@ export default function BarberList({ selected, onSelect }: BarberListProps) {
     );
   }
 
-  // Пустой список 
   if (!barbers?.length) {
     return (
       <div className="barber-list-error">
@@ -69,7 +65,7 @@ export default function BarberList({ selected, onSelect }: BarberListProps) {
     );
   }
 
-  // Успешное состояние 
+
   return (
     <ul className="barber-list">
       {barbers.map((b: Barber) => {
@@ -78,7 +74,6 @@ export default function BarberList({ selected, onSelect }: BarberListProps) {
           .map((n) => n[0])
           .join("");
 
-        // Формируем строку специализаций из услуг барбера
         const specialty =
           b.services
             .filter((s) => s.is_active)

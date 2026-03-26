@@ -38,8 +38,6 @@ function ServiceSkeleton() {
   );
 }
 
-// Основной компонент 
-
 export default function ServiceList({
   barberId,
   selected,

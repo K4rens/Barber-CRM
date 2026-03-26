@@ -1,16 +1,13 @@
 import { http } from "./client";
 import type { Barber, Booking, CreateBookingDto, Service, Slot } from "./types";
 
-// PUBLIC — без авторизации
-
 export const publicApi = {
-  /** Список всех активных барберов с их услугами */
   getBarbers: async (): Promise<Barber[]> => {
     const { data } = await http.get<{ barbers: Barber[] }>("/barbers");
     return data.barbers;
   },
 
-  /** Активные услуги конкретного барбера */
+
   getBarberServices: async (barberId: string): Promise<Service[]> => {
     const { data } = await http.get<{ services: Service[] }>(
       `/barbers/${barberId}/services`,
@@ -38,10 +35,7 @@ export const publicApi = {
     return { date: data.date, slots: data.slots };
   },
 
-  /**
-   * Создать запись (клиентский flow).
-   * Коды ошибок: 409 — слот занят, 422 — невалидные данные.
-   */
+
   createBooking: async (dto: CreateBookingDto): Promise<Booking> => {
     const { data } = await http.post<Booking>("/bookings", dto);
     return data;

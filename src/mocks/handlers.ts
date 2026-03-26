@@ -74,7 +74,6 @@ export const handlers = [
     );
   }),
 
-  // ← внутри массива, не снаружи
   http.post("/api/v1/auth/login", async ({ request }) => {
     const body = (await request.json()) as { login: string; password: string };
     if (body.login === "ivan" && body.password === "secret") {

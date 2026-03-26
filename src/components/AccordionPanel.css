@@ -67,7 +67,6 @@
   transform: rotate(90deg);
 }
 
-/* Тело аккордеона — grid trick для анимации */
 .accordion__body {
   display: grid;
   grid-template-rows: 0fr;
@@ -78,10 +77,9 @@
   grid-template-rows: 1fr;
 }
 
-/* Контент — overflow:hidden обязателен для grid trick */
+
 .accordion__content {
   overflow: hidden;
-  /* border рисуем через внутренний wrapper чтобы не светился при закрытом */
 }
 
 .accordion__content-inner {

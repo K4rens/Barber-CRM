@@ -5,8 +5,6 @@ import axios, {
 } from "axios";
 import type { ApiError } from "./types";
 
-//Утилиты для работы с токенами 
-
 const TOKEN_KEY = "barber_access_token";
 const REFRESH_KEY = "barber_refresh_token";
 
@@ -21,8 +19,6 @@ export const tokenStorage = {
   },
 };
 
-//  Кастомный класс ошибки 
-
 export class ApiException extends Error {
   readonly status: number;
   readonly code: string;
@@ -35,14 +31,10 @@ export class ApiException extends Error {
   }
 }
 
-//  Создание инстанса
-
 export const http: AxiosInstance = axios.create({
   baseURL: "/api/v1",
   headers: { "Content-Type": "application/json" },
 });
-
-// Request interceptor: подставляем Bearer-токен
 
 http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = tokenStorage.get();
@@ -52,7 +44,6 @@ http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-// Response interceptor: рефреш + нормализация ошибок 
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -74,7 +65,6 @@ http.interceptors.response.use(
       _retry?: boolean;
     };
 
-    //401: пробуем рефреш токена
     if (error.response?.status === 401 && !originalRequest._retry) {
       const refreshToken = tokenStorage.getRefresh();
 
@@ -123,7 +113,6 @@ http.interceptors.response.use(
   },
 );
 
-//  Хелпер: Axios ошибка → ApiException 
 
 function normalizeError(error: AxiosError<ApiError>): ApiException {
   const status = error.response?.status ?? 0;

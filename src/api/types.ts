@@ -1,21 +1,18 @@
-// Barber 
 export interface Barber {
   barber_id: string; // uuid
   name: string;
   services: Service[];
 }
 
-// Service
 
 export interface Service {
-  service_id: string; // uuid
+  service_id: string; 
   name: string;
-  price: number; // в рублях
-  duration_minutes: number; // кратно 15
+  price: number; 
+  duration_minutes: number; 
   is_active: boolean;
 }
 
-//Slot 
 
 export type SlotStatus = "free" | "booked" | "blocked";
 
@@ -23,7 +20,7 @@ export interface Slot {
   status: SlotStatus;
   time_start: string; 
   time_end: string; 
-  booking?: SlotBooking; // присутствует только при status === 'booked'
+  booking?: SlotBooking; 
 }
 
 export interface SlotBooking {
@@ -33,7 +30,6 @@ export interface SlotBooking {
   service_name: string;
 }
 
-//ScheduleDay 
 
 export type PartOfDay = "am" | "pm";
 
@@ -62,7 +58,6 @@ export interface Booking {
   status: BookingStatus;
 }
 
-// ── Client ──────────────────────────────────────────────────
 
 export interface Client {
   client_id: string;
@@ -70,10 +65,9 @@ export interface Client {
   phone: string;
   notes?: string;
   visits_count: number;
-  last_visit?: string; // 'YYYY-MM-DD'
+  last_visit?: string; 
 }
 
-// ── Analytics ───────────────────────────────────────────────
 
 export interface TopService {
   service_id: string;
@@ -106,30 +100,28 @@ export interface BarberStats {
   daily_breakdown: DayStat[];
 }
 
-// ── Auth ────────────────────────────────────────────────────
+
 
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;
-  expires_in: number; // секунды
+  expires_in: number; 
   barber: Barber;
 }
 
-// ── Ошибка API ──────────────────────────────────────────────
 
 export interface ApiError {
-  code: string; // e.g. 'NOT_FOUND', 'SLOT_TAKEN'
+  code: string;
   message: string;
 }
 
-// ── Тела запросов (Request DTOs) ────────────────────────────
 
 export interface CreateBookingDto {
   barber_id: string;
   service_id: string;
   client_name: string;
   client_phone: string;
-  time_start: string; // ISO 8601 date-time
+  time_start: string; 
 }
 
 export interface CreateStaffBookingDto {
