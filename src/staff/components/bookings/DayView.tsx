@@ -98,7 +98,8 @@ export default function DayView({
   );
 
   const hasDayBookings = dayBookings.length > 0;
-  const isDayOff = dayShift === null || (dayShift === undefined && !hasDayBookings);
+  const isDayOff =
+    dayShift === null || (dayShift === undefined && !hasDayBookings);
 
   const occupied = useMemo(() => {
     const map: Record<string, Booking> = {};
@@ -196,8 +197,10 @@ export default function DayView({
                           onClick={() => onBookingClick(booking)}
                         >
                           <span className="day-booking__name">
-                            {booking.name.split(" ")[0]}{" "}
-                            {booking.name.split(" ")[1]?.[0]}.
+                            {booking.name.split(" ")[0]}
+                            {booking.name.split(" ")[1]
+                              ? " " + booking.name.split(" ")[1][0] + "."
+                              : ""}
                           </span>
                           <span className="day-booking__service">
                             {booking.service}
