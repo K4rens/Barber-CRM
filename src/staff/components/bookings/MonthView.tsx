@@ -34,15 +34,7 @@ export default function MonthView({ monthOffset, onDayClick }: Props) {
 
   return (
     <div className="month-calendar">
-      <div
-        style={{
-          marginBottom: 6,
-          fontSize: 11,
-          color: "#bbb",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-        }}
-      >
+      <div className="month-label">
         {MONTHS_NOM[month]} {year}
       </div>
       <div className="month-head">

@@ -242,11 +242,6 @@ export default function StaffLayout() {
 
       {/* ── Мобильный топбар ── */}
       <header className="topbar">
-        <div className="topbar__brand">Barber CRM</div>
-        <div className="topbar__profile">
-          <span className="topbar__name">{barberName.split(" ")[0]}</span>
-          <div className="topbar__avatar">{initials}</div>
-        </div>
         <button
           className={`topbar__burger${mobileMenuOpen ? " topbar__burger--open" : ""}`}
           onClick={() => setMobileMenuOpen((v) => !v)}
@@ -256,6 +251,11 @@ export default function StaffLayout() {
           <span />
           <span />
         </button>
+        <div className="topbar__brand">Barber CRM</div>
+        <div className="topbar__profile">
+          <span className="topbar__name">{barberName.split(" ")[0]}</span>
+          <div className="topbar__avatar">{initials}</div>
+        </div>
       </header>
 
       {/* ── Мобильное выдвижное меню ── */}

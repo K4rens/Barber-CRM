@@ -291,6 +291,7 @@
   text-transform: uppercase;
   color: #bbb;
   margin-bottom: 4px;
+  padding-left: 4px;
 }
 
 .staff-page-header__title {
@@ -298,6 +299,7 @@
   font-weight: 300;
   letter-spacing: -0.01em;
   margin: 0;
+  padding-left: 4px;
 }
 
 /* ════════════════════════════════════════
@@ -369,7 +371,6 @@
     align-items: center;
     gap: 8px;
     margin-left: auto;
-    margin-right: 10px;
   }
 
   .topbar__name {
