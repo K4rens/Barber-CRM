@@ -1,5 +1,3 @@
-// src/staff/components/schedule/TemplateModal.tsx
-
 import { useState } from "react";
 import type { Shift, Template } from "../../types/schedule";
 import { DAYS_FULL } from "../../types/schedule";

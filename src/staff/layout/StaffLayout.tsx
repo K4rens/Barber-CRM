@@ -1,5 +1,3 @@
-// src/staff/layout/StaffLayout.tsx
-
 import {
   NavLink,
   Outlet,

@@ -1,17 +1,14 @@
-// src/staff/types/schedule.ts
-
 export interface Shift {
-  start: string; // 'HH:00'
-  end: string; // 'HH:00'
+  start: string; 
+  end: string; 
 }
 
-// scheduleState[weekOffset][dayIndex] → Shift | null
 export type WeekSchedule = Record<number, Shift | null>;
 export type ScheduleState = Record<number, WeekSchedule>;
 
 export interface Template {
   id: number;
-  days: (Shift | null)[]; // 7 элементов, 0=Пн
+  days: (Shift | null)[];
 }
 
 export const DAYS_FULL = [

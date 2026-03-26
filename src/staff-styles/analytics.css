@@ -1,5 +1,3 @@
-/* src/staff-styles/analytics.css */
-
 .period-tabs {
   display: flex;
   gap: 4px;
@@ -99,13 +97,7 @@
 .booking-stat__label   { font-size: 11px; color: #aaa; }
 .booking-stat__value   { font-size: 20px; font-weight: 300; }
 
-/* ════════════════════════════════════════
-   АДАПТИВ analytics.css (≤ 768px)
-   ════════════════════════════════════════ */
-
 @media (max-width: 768px) {
-
-  /* Табы — растягиваем на всю ширину */
   .period-tabs {
     width: 100%;
   }
@@ -116,7 +108,6 @@
     padding: 6px 4px;
   }
 
-  /* 6 карточек — 2 колонки × 3 строки, как и было по смыслу */
   .stat-cards {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -131,7 +122,6 @@
     font-size: 20px;
   }
 
-  /* Два блока — в одну колонку */
   .analytics-section {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -146,10 +136,6 @@
     font-size: 11px;
   }
 }
-
-/* ════════════════════════════════════════
-   МАЛЕНЬКИЙ ТЕЛЕФОН (≤ 390px)
-   ════════════════════════════════════════ */
 
 @media (max-width: 390px) {
   .stat-cards {

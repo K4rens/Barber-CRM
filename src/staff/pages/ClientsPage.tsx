@@ -56,8 +56,6 @@ function formatDate(iso: string) {
   return `${d}.${m}.${y}`;
 }
 
-// ── Модалка истории ───────────────────────────────────────────
-
 function HistoryModal({
   client,
   onClose,
@@ -151,8 +149,6 @@ function HistoryModal({
   );
 }
 
-// ── Модалка описания ──────────────────────────────────────────
-
 function NotesModal({
   client,
   onSave,
@@ -206,8 +202,6 @@ function NotesModal({
     </>
   );
 }
-
-// ── Страница ──────────────────────────────────────────────────
 
 export default function ClientsPage() {
   const { clients, updateNotes } = useStaffContext();

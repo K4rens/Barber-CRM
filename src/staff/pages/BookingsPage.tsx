@@ -1,5 +1,3 @@
-// src/staff/pages/BookingsPage.tsx
-
 import { useState } from "react";
 import type { Booking } from "../types/bookings";
 import { MONTHS, MONTHS_NOM, getWeekStart } from "../types/bookings";

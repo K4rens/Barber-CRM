@@ -1,5 +1,3 @@
-// src/staff/components/bookings/WeekView.tsx
-
 import { useMemo } from "react";
 import type { Booking } from "../../types/bookings";
 import {
@@ -86,13 +84,11 @@ export default function WeekView({
         {monthLabel}
       </div>
       <div className="week-calendar">
-        {/* Заголовки дней */}
         <div className="week-calendar__head">
           {days.map((d, i) => {
             const isToday = d.getTime() === today.getTime();
             const weekScheduleForDay = schedule[weekOffset] ?? {};
             const shift = weekScheduleForDay[i];
-            // undefined = не задано (используем DEFAULT), null = выходной, Shift = рабочий
             const hasBookings = dayBookings(days[i]).length > 0;
             const isOff =
               shift === null || (shift === undefined && !hasBookings);
@@ -111,13 +107,11 @@ export default function WeekView({
           })}
         </div>
 
-        {/* Тело */}
         <div className="week-calendar__body">
           {days.map((_, i) => {
             const isToday = days[i].getTime() === today.getTime();
             const weekScheduleForDay = schedule[weekOffset] ?? {};
             const shift = weekScheduleForDay[i];
-            // undefined = не задано (используем DEFAULT), null = выходной, Shift = рабочий
             const hasBookings = dayBookings(days[i]).length > 0;
             const isOff =
               shift === null || (shift === undefined && !hasBookings);
@@ -157,7 +151,6 @@ export default function WeekView({
         </div>
       </div>
 
-      {/* Лейбл недели снизу для навигации */}
       <div style={{ display: "none" }} id="week-label-data">
         {weekLabel}
       </div>

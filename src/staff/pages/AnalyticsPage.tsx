@@ -1,5 +1,3 @@
-// src/staff/pages/AnalyticsPage.tsx
-
 import { useState } from "react";
 import "../../staff-styles/analytics.css";
 
@@ -103,7 +101,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Карточки метрик */}
       <div className="stat-cards">
         <StatCard label="Выручка" value={d.revenue} />
         <StatCard label="Средний чек" value={d.avgCheck} />
@@ -113,9 +110,7 @@ export default function AnalyticsPage() {
         <StatCard label="Текущих записей" value={d.pending} />
       </div>
 
-      {/* Блоки */}
       <div className="analytics-section">
-        {/* Топ услуг */}
         <div className="analytics-block">
           <div className="analytics-block__title">Топ услуг</div>
           {d.top.map((s) => (
@@ -129,7 +124,6 @@ export default function AnalyticsPage() {
           ))}
         </div>
 
-        {/* Итоги по записям */}
         <div className="analytics-block">
           <div className="analytics-block__title">Итоги по записям</div>
           <div className="booking-stats">

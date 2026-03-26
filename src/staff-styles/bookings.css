@@ -1,14 +1,9 @@
-/* src/staff-styles/bookings.css */
-
-/* ── Шапка страницы ── */
-
 .bookings-header-right {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* ── Навигация по неделям/дням ── */
 
 .week-nav { display: flex; align-items: center; gap: 12px; }
 
@@ -28,8 +23,6 @@
 
 .week-nav__btn:hover { background: #000; color: #fff; }
 .week-nav__label { font-size: 13px; font-weight: 500; min-width: 210px; text-align: center; }
-
-/* ── Переключатель вид ── */
 
 .view-tabs {
   display: flex;
@@ -57,8 +50,6 @@
   color: #fff;
   font-weight: 500;
 }
-
-/* ── Недельный вид ── */
 
 .week-calendar {
   border: 1.5px solid #000;
@@ -137,8 +128,6 @@
   transform: rotate(180deg);
 }
 
-/* ── Карточка записи (недельный вид) ── */
-
 .booking-card {
   border: 1.5px solid #000;
   border-radius: 7px;
@@ -205,7 +194,6 @@
 .booking-card:hover .booking-card__service { color: rgba(255,255,255,0.7); }
 .booking-card:hover .booking-card__price   { color: rgba(255,255,255,0.6); }
 
-/* ── Дневной вид ── */
 
 .day-view {
   border: 1.5px solid #000;
@@ -277,8 +265,6 @@
   background: #fafafa;
 }
 
-/* ── Карточка записи (дневной вид) ── */
-
 .day-booking-card {
   position: absolute;
   top: 3px;
@@ -339,7 +325,6 @@
   color: #aaa;
 }
 
-/* ── Месячный вид ── */
 
 .month-calendar {
   border: 1.5px solid #000;
@@ -408,8 +393,6 @@
 }
 
 .month-cell__num { font-size: 11px; font-weight: 400; color: #000; }
-
-/* ── Дровер ── */
 
 .drawer {
   position: fixed;
@@ -576,8 +559,6 @@
 .drawer-btn--pending { background: #fff; color: #888; border: 1.5px solid #ddd; }
 .drawer-btn--pending:hover { border-color: #000; color: #000; }
 
-/* ── Форма новой записи ── */
-
 .nb-form {
   padding: 16px 20px 20px;
   display: flex;
@@ -640,13 +621,8 @@
   margin-top: 4px;
 }
 
-/* ════════════════════════════════════════
-   АДАПТИВ bookings.css (≤ 768px)
-   ════════════════════════════════════════ */
-
 @media (max-width: 768px) {
 
-  /* Шапка — в колонку */
   .bookings-header-right {
     flex-direction: column;
     align-items: flex-start;
@@ -675,7 +651,6 @@
     padding: 6px 4px;
   }
 
-  /* Недельный вид — горизонтальный скролл */
   .week-calendar {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -687,12 +662,10 @@
     min-width: 700px;
   }
 
-  /* Дневной вид — на всю ширину */
   .day-view {
     max-width: 100%;
   }
 
-  /* Месячный вид — на всю ширину */
   .month-calendar {
     max-width: 100%;
   }
@@ -706,7 +679,6 @@
     font-size: 10px;
   }
 
-  /* Дровер — на всю ширину снизу */
   .drawer {
     top: auto;
     bottom: 0;
@@ -726,7 +698,6 @@
     transform: translateY(0);
   }
 
-  /* Форма новой записи — колонка */
   .nb-row {
     grid-template-columns: 1fr;
   }

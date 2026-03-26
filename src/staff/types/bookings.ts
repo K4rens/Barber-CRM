@@ -1,18 +1,16 @@
-// src/staff/types/bookings.ts
-
 export type BookingStatus = "pending" | "completed" | "cancelled" | "no_show";
 
 export interface Booking {
   id: number;
-  dayOffset: number; // 0=Пн … 6=Вс
+  dayOffset: number;
   name: string;
   phone: string;
   service: string;
-  start: string; // 'HH:MM'
-  end: string; // 'HH:MM'
+  start: string; 
+  end: string;
   duration?: number;
   status: BookingStatus;
-  date?: string; // 'YYYY-MM-DD'
+  date?: string; 
   clientId?: number | null;
 }
 
@@ -91,7 +89,6 @@ export function shortName(fullName: string): string {
   return parts[0] + (parts[1] ? " " + parts[1][0] + "." : "");
 }
 
-/** ISO-дата: начало недели + weekOffset недель + dayIndex дней */
 function wd(weekOffset: number, dayIndex: number): string {
   const ws = getWeekStart(weekOffset);
   ws.setDate(ws.getDate() + dayIndex);
@@ -105,7 +102,6 @@ function wd(weekOffset: number, dayIndex: number): string {
 }
 
 export const MOCK_BOOKINGS: Booking[] = [
-  // ── Текущая неделя ────────────────────────────────────────
   {
     id: 1,
     dayOffset: 0,
@@ -250,7 +246,6 @@ export const MOCK_BOOKINGS: Booking[] = [
     date: wd(0, 4),
     status: "pending",
   },
-  // ── Следующая неделя ──────────────────────────────────────
   {
     id: 13,
     dayOffset: 0,

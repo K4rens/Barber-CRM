@@ -1,5 +1,3 @@
-/* src/staff-styles/schedule.css */
-
 .schedule-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -49,7 +47,6 @@
 .schedule-day--today .schedule-day__add { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.3); }
 .schedule-day--today .schedule-day__add:hover { color: #fff; border-color: rgba(255,255,255,0.8); }
 
-/* ── Шаблоны ── */
 
 .schedule-templates-section {
   margin-top: 32px;
@@ -136,7 +133,6 @@
 .btn--danger { background: transparent; border-color: #e53935; color: #e53935; }
 .btn--danger:hover { background: #ffebee; }
 
-/* ── Строки шаблона в модалке ── */
 
 .template-day-row {
   display: flex;
@@ -184,18 +180,13 @@
   font-style: italic;
 }
 
-/* ════════════════════════════════════════
-   АДАПТИВ schedule.css (≤ 768px)
-   ════════════════════════════════════════ */
+
 
 @media (max-width: 768px) {
-
-  /* Сетка дней: 2 колонки, воскресенье на всю строку */
   .schedule-grid {
     grid-template-columns: 1fr 1fr;
   }
 
-  /* Воскресенье — последний (7й) элемент — на всю строку */
   .schedule-grid > :last-child {
     grid-column: 1 / -1;
   }
@@ -208,7 +199,6 @@
     font-size: 11px;
   }
 
-  /* Шаблоны: 2 колонки, воскресенье на всю строку */
   .template-days-row {
     grid-template-columns: 1fr 1fr;
   }
@@ -221,12 +211,10 @@
     padding: 10px 6px;
   }
 
-  /* Кнопки шаблона — в колонку на маленьких экранах */
   .template-actions {
     flex-wrap: wrap;
   }
 
-  /* Строка дня: название + чекбокс в одну строку, время под ними */
   .template-day-row {
     flex-wrap: wrap;
     gap: 4px 8px;
@@ -240,13 +228,11 @@
     font-size: 13px;
   }
 
-  /* Чекбокс — в одну строку с названием, прижат вправо */
   .off-checkbox {
     flex-shrink: 0;
     margin-left: auto;
   }
 
-  /* Поля времени — на всю ширину второй строки */
   .template-day-row .time-inputs {
     flex: 0 0 100%;
     min-width: 0;

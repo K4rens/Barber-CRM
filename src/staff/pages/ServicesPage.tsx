@@ -1,12 +1,10 @@
-// src/staff/pages/ServicesPage.tsx
-
 import { useState } from "react";
 import "../../staff-styles/services.css";
 
 interface Service {
   id: number;
   name: string;
-  duration: number; // минуты
+  duration: number; 
   price: number;
   active: boolean;
 }
@@ -34,8 +32,6 @@ const INITIAL_SERVICES: Service[] = [
   { id: 3, name: "Стрижка + борода", duration: 60, price: 1800, active: true },
   { id: 4, name: "Fade", duration: 60, price: 1500, active: false },
 ];
-
-// ── Модалка ──────────────────────────────────────────────────
 
 interface ModalProps {
   service: Service | null; // null = новая
@@ -139,12 +135,10 @@ function ServiceModal({ service, onSave, onClose }: ModalProps) {
   );
 }
 
-// ── Страница ─────────────────────────────────────────────────
-
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
   const [nextId, setNextId] = useState(5);
-  const [editing, setEditing] = useState<Service | null | undefined>(undefined); // undefined = закрыта
+  const [editing, setEditing] = useState<Service | null | undefined>(undefined);
 
   const handleSave = (data: Omit<Service, "id">) => {
     if (editing) {

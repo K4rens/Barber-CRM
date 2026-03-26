@@ -1,5 +1,3 @@
-// src/staff/components/bookings/MonthView.tsx
-
 import { useMemo } from "react";
 import { MONTHS_NOM } from "../../types/bookings";
 

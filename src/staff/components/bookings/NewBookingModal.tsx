@@ -1,5 +1,3 @@
-// src/staff/components/bookings/NewBookingModal.tsx
-
 import { useState, useEffect } from "react";
 import type { Booking } from "../../types/bookings";
 
@@ -39,7 +37,6 @@ function formatDuration(min: number): string {
   return m ? `${h} ч ${m} мин` : `${h} ч`;
 }
 
-/** Локальная ISO-дата без UTC-сдвига */
 function toLocalIso(d: Date): string {
   return (
     d.getFullYear() +
@@ -115,7 +112,6 @@ export default function NewBookingModal({
       ":" +
       String(endTotal % 60).padStart(2, "0");
 
-    // date из input[type=date] уже в формате YYYY-MM-DD — парсим без UTC
     const [y, mo, day] = date.split("-").map(Number);
     const d = new Date(y, mo - 1, day);
     const dayOfWeek = d.getDay();
@@ -130,7 +126,7 @@ export default function NewBookingModal({
       end: endStr,
       duration: dur,
       status: "pending",
-      date, // уже локальная строка YYYY-MM-DD
+      date, 
     });
     onClose();
   };

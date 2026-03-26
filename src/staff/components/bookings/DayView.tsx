@@ -1,5 +1,3 @@
-// src/staff/components/bookings/DayView.tsx
-
 import { useMemo } from "react";
 import type { Booking } from "../../types/bookings";
 import {

@@ -1,5 +1,3 @@
-// src/staff/components/schedule/ShiftModal.tsx
-
 import { useState } from "react";
 import type { Shift } from "../../types/schedule";
 import type { Booking } from "../../types/bookings";
@@ -8,7 +6,7 @@ import { DAYS_FULL, START_OPTIONS, END_OPTIONS } from "../../types/schedule";
 interface Props {
   dayIndex: number;
   current: Shift | null;
-  dayBookings: Booking[]; // pending-записи на этот день
+  dayBookings: Booking[]; 
   onSave: (shift: Shift | null) => void;
   onClose: () => void;
 }
@@ -38,11 +36,9 @@ export default function ShiftModal({
       return;
     }
 
-    // Проверяем конфликт с записями
     const conflict = dayBookings.find((b) => {
       const bs = timeToMin(b.start);
       const be = timeToMin(b.end);
-      // Запись выходит за рамки новой смены
       return bs < sh || be > eh;
     });
 

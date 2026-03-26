@@ -1,4 +1,3 @@
-// src/staff/components/bookings/BookingDrawer.tsx
 import React from "react";
 import { useState } from "react";
 import { useStaffContext } from "../../layout/StaffLayout";
@@ -29,8 +28,6 @@ function formatDate(iso: string) {
   const [y, m, d] = iso.split("-");
   return `${d}.${m}.${y}`;
 }
-
-// ── Модалка истории ───────────────────────────────────────────
 
 function HistoryModal({
   name,
@@ -121,8 +118,6 @@ function HistoryModal({
   );
 }
 
-// ── Модалка описания ──────────────────────────────────────────
-
 function NotesModal({
   name,
   notes,
@@ -183,7 +178,6 @@ function NotesModal({
   );
 }
 
-// ── Дровер ────────────────────────────────────────────────────
 
 export default function BookingDrawer({
   booking,
@@ -198,7 +192,6 @@ export default function BookingDrawer({
   const [showNotes, setShowNotes] = useState(false);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
-  // Сбрасываем picker при смене записи
   const prevIdRef = React.useRef(booking?.id);
   if (prevIdRef.current !== booking?.id) {
     prevIdRef.current = booking?.id;
@@ -210,10 +203,8 @@ export default function BookingDrawer({
 
   return (
     <>
-      {/* Оверлей — только когда открыт */}
       {isOpen && <div className="staff-overlay" onClick={onClose} />}
 
-      {/* Дровер — всегда в DOM, анимируется через CSS */}
       <div className={`drawer${isOpen ? " drawer--open" : ""}`}>
         <div className="drawer__header">
           <h2 className="drawer__title">{booking?.name ?? ""}</h2>
@@ -222,7 +213,6 @@ export default function BookingDrawer({
           </button>
         </div>
 
-        {/* Контент — только когда есть запись */}
         {booking && (
           <>
             <div className="drawer__body">
