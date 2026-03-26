@@ -7,7 +7,6 @@ import {
   useOutletContext,
 } from "react-router-dom";
 import type { Shift, Template } from "../types/schedule";
-
 import type { Booking, BookingStatus } from "../types/bookings";
 import { MOCK_BOOKINGS } from "../types/bookings";
 import { tokenStorage } from "../../api/client";
@@ -147,7 +146,6 @@ export default function StaffLayout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
-
   const [schedule, setSchedule] = useState<ScheduleState>({});
   const [templates, setTemplates] = useState<Template[]>([]);
   const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
@@ -192,7 +190,6 @@ export default function StaffLayout() {
 
   return (
     <div className="staff-app">
-      {/* ── Десктоп сайдбар ── */}
       <aside className="sidebar">
         <div className="sidebar__top">
           <div className="sidebar__brand">Barber CRM</div>
@@ -204,7 +201,6 @@ export default function StaffLayout() {
             </div>
           </div>
         </div>
-
         <nav className="sidebar__nav">
           {NAV_ITEMS.map((item) => (
             <NavLink
@@ -219,8 +215,8 @@ export default function StaffLayout() {
             </NavLink>
           ))}
         </nav>
-
         <button
+          type="button"
           className="sidebar__logout"
           onClick={() => setShowLogoutConfirm(true)}
         >
@@ -240,9 +236,9 @@ export default function StaffLayout() {
         </button>
       </aside>
 
-      {/* ── Мобильный топбар ── */}
       <header className="topbar">
         <button
+          type="button"
           className={`topbar__burger${mobileMenuOpen ? " topbar__burger--open" : ""}`}
           onClick={() => setMobileMenuOpen((v) => !v)}
           aria-label="Меню"
@@ -258,7 +254,6 @@ export default function StaffLayout() {
         </div>
       </header>
 
-      {/* ── Мобильное выдвижное меню ── */}
       {mobileMenuOpen && (
         <div
           className="mobile-overlay"
@@ -289,6 +284,7 @@ export default function StaffLayout() {
           ))}
         </div>
         <button
+          type="button"
           className="mobile-nav__logout"
           onClick={() => {
             setMobileMenuOpen(false);
@@ -311,12 +307,10 @@ export default function StaffLayout() {
         </button>
       </nav>
 
-      {/* ── Контент страницы ── */}
       <main className="staff-content">
         <Outlet context={outletContext} />
       </main>
 
-      {/* ── Модалка подтверждения выхода ── */}
       {showLogoutConfirm && (
         <>
           <div
@@ -327,6 +321,7 @@ export default function StaffLayout() {
             <div className="staff-modal__header">
               <span className="staff-modal__title">Выйти из аккаунта?</span>
               <button
+                type="button"
                 className="staff-modal__close"
                 onClick={() => setShowLogoutConfirm(false)}
               >
@@ -335,12 +330,14 @@ export default function StaffLayout() {
             </div>
             <div className="staff-modal__actions">
               <button
+                type="button"
                 className="staff-btn staff-btn--danger"
                 onClick={handleLogout}
               >
                 Да, выйти
               </button>
               <button
+                type="button"
                 className="staff-btn staff-btn--secondary"
                 onClick={() => setShowLogoutConfirm(false)}
               >

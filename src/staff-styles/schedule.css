@@ -183,3 +183,56 @@
   margin-top: 6px;
   font-style: italic;
 }
+
+/* ════════════════════════════════════════
+   АДАПТИВ schedule.css (≤ 768px)
+   ════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Сетка дней: 2 колонки, воскресенье на всю строку */
+  .schedule-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Воскресенье — последний (7й) элемент — на всю строку */
+  .schedule-grid > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .schedule-day {
+    padding: 12px;
+  }
+
+  .schedule-day__name {
+    font-size: 11px;
+  }
+
+  /* Шаблоны: 2 колонки, воскресенье на всю строку */
+  .template-days-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .template-days-row > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .template-day-cell {
+    padding: 10px 6px;
+  }
+
+  /* Кнопки шаблона — в колонку на маленьких экранах */
+  .template-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 390px) {
+  .schedule-day {
+    padding: 10px;
+  }
+
+  .schedule-day__name {
+    font-size: 10px;
+  }
+}

@@ -98,3 +98,85 @@
 .booking-stat          { display: flex; flex-direction: column; gap: 4px; }
 .booking-stat__label   { font-size: 11px; color: #aaa; }
 .booking-stat__value   { font-size: 20px; font-weight: 300; }
+/* ════════════════════════════════════════
+   АДАПТИВ analytics.css (≤ 768px)
+   ════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Табы периода — на всю ширину */
+  .period-tabs {
+    width: 100%;
+  }
+
+  .period-tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 8px;
+  }
+
+  /* Карточки метрик — 2 колонки вместо 3 */
+  .stat-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 14px;
+    gap: 6px;
+  }
+
+  .stat-card__value {
+    font-size: 18px;
+  }
+
+  /* Аналитика — в одну колонку */
+  .analytics-section {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .analytics-block {
+    padding: 16px;
+  }
+
+  /* Топ услуг — название может обрезаться */
+  .top-service__name {
+    min-width: 100px;
+    font-size: 11px;
+  }
+}
+
+/* ════════════════════════════════════════
+   МАЛЕНЬКИЙ ТЕЛЕФОН (≤ 390px)
+   ════════════════════════════════════════ */
+
+@media (max-width: 390px) {
+
+  /* На 390 и меньше — карточки тоже в одну колонку */
+  .stat-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 12px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0;
+  }
+
+  .stat-card__label {
+    font-size: 9px;
+  }
+
+  .stat-card__value {
+    font-size: 16px;
+  }
+
+  .period-tab {
+    font-size: 11px;
+    padding: 5px 4px;
+  }
+}
