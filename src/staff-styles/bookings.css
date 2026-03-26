@@ -420,9 +420,14 @@
   background: #fff;
   border-left: 1.5px solid #000;
   z-index: 20;
-  transform: translateX(0);
   display: flex;
   flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+}
+
+.drawer--open {
+  transform: translateX(0);
 }
 
 .drawer__header {
@@ -714,6 +719,11 @@
     border-top: 1.5px solid #000;
     border-radius: 16px 16px 0 0;
     overflow-y: auto;
+    transform: translateY(100%);
+  }
+
+  .drawer--open {
+    transform: translateY(0);
   }
 
   /* Форма новой записи — колонка */

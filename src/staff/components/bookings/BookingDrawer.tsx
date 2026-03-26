@@ -193,162 +193,180 @@ export default function BookingDrawer({
   const { clients, updateNotes } = useStaffContext();
   const getNotes = (phone: string) =>
     clients.find((c) => c.phone === phone)?.notes ?? "";
+
   const [showHistory, setShowHistory] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
-  // Сбрасываем при смене записи
+
+  // Сбрасываем picker при смене записи
   const prevIdRef = React.useRef(booking?.id);
   if (prevIdRef.current !== booking?.id) {
     prevIdRef.current = booking?.id;
     setShowStatusPicker(false);
   }
 
-  if (!booking) return null;
-
-  const isPending = booking.status === "pending";
+  const isOpen = !!booking;
+  const isPending = booking?.status === "pending";
 
   return (
     <>
-      <div className="staff-overlay" onClick={onClose} />
-      <div className="drawer drawer--open">
+      {/* Оверлей — только когда открыт */}
+      {isOpen && <div className="staff-overlay" onClick={onClose} />}
+
+      {/* Дровер — всегда в DOM, анимируется через CSS */}
+      <div className={`drawer${isOpen ? " drawer--open" : ""}`}>
         <div className="drawer__header">
-          <h2 className="drawer__title">{booking.name}</h2>
+          <h2 className="drawer__title">{booking?.name ?? ""}</h2>
           <button className="drawer__close" onClick={onClose}>
             ✕
           </button>
         </div>
 
-        <div className="drawer__body">
-          <div className="drawer__row">
-            <span className="drawer__label">Телефон</span>
-            <span className="drawer__value">{booking.phone}</span>
-          </div>
-          <div className="drawer__row">
-            <span className="drawer__label">Услуга</span>
-            <span className="drawer__value">{booking.service}</span>
-          </div>
-          <div className="drawer__row">
-            <span className="drawer__label">Время</span>
-            <span className="drawer__value">
-              {booking.start} — {booking.end}
-            </span>
-          </div>
-          <div className="drawer__row">
-            <span className="drawer__label">Статус</span>
-            <span className="drawer__value">{STATUS_MAP[booking.status]}</span>
-          </div>
-        </div>
+        {/* Контент — только когда есть запись */}
+        {booking && (
+          <>
+            <div className="drawer__body">
+              <div className="drawer__row">
+                <span className="drawer__label">Телефон</span>
+                <span className="drawer__value">{booking.phone}</span>
+              </div>
+              <div className="drawer__row">
+                <span className="drawer__label">Услуга</span>
+                <span className="drawer__value">{booking.service}</span>
+              </div>
+              <div className="drawer__row">
+                <span className="drawer__label">Время</span>
+                <span className="drawer__value">
+                  {booking.start} — {booking.end}
+                </span>
+              </div>
+              <div className="drawer__row">
+                <span className="drawer__label">Статус</span>
+                <span className="drawer__value">
+                  {STATUS_MAP[booking.status]}
+                </span>
+              </div>
+            </div>
 
-        {/* Описание и история */}
-        <div className="drawer__client-actions">
-          <button
-            className="drawer-client-btn"
-            onClick={() => setShowNotes(true)}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            Описание
-          </button>
-          <button
-            className="drawer-client-btn drawer-client-btn--black"
-            onClick={() => setShowHistory(true)}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            История
-          </button>
-        </div>
-
-        {/* Действия для pending */}
-        {isPending && (
-          <div className="drawer__actions">
-            <button
-              className="drawer-btn drawer-btn--complete"
-              onClick={() => onStatusChange(booking.id, "completed")}
-            >
-              Завершить
-            </button>
-            <button
-              className="drawer-btn drawer-btn--noshow"
-              onClick={() => onStatusChange(booking.id, "no_show")}
-            >
-              Не пришёл
-            </button>
-            <button
-              className="drawer-btn drawer-btn--cancel"
-              onClick={() => onStatusChange(booking.id, "cancelled")}
-            >
-              Отменить
-            </button>
-          </div>
-        )}
-
-        {/* Изменить статус для остальных */}
-        {!isPending && (
-          <div className="drawer__actions">
-            {!showStatusPicker ? (
+            <div className="drawer__client-actions">
               <button
-                className="drawer-btn drawer-btn--change"
-                onClick={() => setShowStatusPicker(true)}
+                className="drawer-client-btn"
+                onClick={() => setShowNotes(true)}
               >
-                Изменить статус
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                Описание
               </button>
-            ) : (
-              <>
-                <p className="drawer__picker-label">Выберите новый статус</p>
-                {STATUS_LABELS.map((s) => (
-                  <button
-                    key={s.value}
-                    className={`drawer-btn drawer-btn--${s.value === "completed" ? "complete" : s.value === "cancelled" ? "cancel" : s.value === "no_show" ? "noshow" : "change"}`}
-                    onClick={() => {
-                      onStatusChange(booking.id, s.value);
-                      setShowStatusPicker(false);
-                    }}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </>
+              <button
+                className="drawer-client-btn drawer-client-btn--black"
+                onClick={() => setShowHistory(true)}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                История
+              </button>
+            </div>
+
+            {isPending && (
+              <div className="drawer__actions">
+                <button
+                  className="drawer-btn drawer-btn--complete"
+                  onClick={() => onStatusChange(booking.id, "completed")}
+                >
+                  Завершить
+                </button>
+                <button
+                  className="drawer-btn drawer-btn--noshow"
+                  onClick={() => onStatusChange(booking.id, "no_show")}
+                >
+                  Не пришёл
+                </button>
+                <button
+                  className="drawer-btn drawer-btn--cancel"
+                  onClick={() => onStatusChange(booking.id, "cancelled")}
+                >
+                  Отменить
+                </button>
+              </div>
             )}
-          </div>
+
+            {!isPending && (
+              <div className="drawer__actions">
+                {!showStatusPicker ? (
+                  <button
+                    className="drawer-btn drawer-btn--change"
+                    onClick={() => setShowStatusPicker(true)}
+                  >
+                    Изменить статус
+                  </button>
+                ) : (
+                  <>
+                    <p className="drawer__picker-label">
+                      Выберите новый статус
+                    </p>
+                    {STATUS_LABELS.map((s) => (
+                      <button
+                        key={s.value}
+                        className={`drawer-btn drawer-btn--${
+                          s.value === "completed"
+                            ? "complete"
+                            : s.value === "cancelled"
+                              ? "cancel"
+                              : s.value === "no_show"
+                                ? "noshow"
+                                : "change"
+                        }`}
+                        onClick={() => {
+                          onStatusChange(booking.id, s.value);
+                          setShowStatusPicker(false);
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+
+            {showHistory && (
+              <HistoryModal
+                name={booking.name}
+                phone={booking.phone}
+                onClose={() => setShowHistory(false)}
+              />
+            )}
+            {showNotes && (
+              <NotesModal
+                name={booking.name}
+                notes={getNotes(booking.phone)}
+                onSave={(n) => updateNotes(booking.phone, n)}
+                onClose={() => setShowNotes(false)}
+              />
+            )}
+          </>
         )}
       </div>
-
-      {showHistory && (
-        <HistoryModal
-          name={booking.name}
-          phone={booking.phone}
-          onClose={() => setShowHistory(false)}
-        />
-      )}
-      {showNotes && (
-        <NotesModal
-          name={booking.name}
-          notes={getNotes(booking.phone)}
-          onSave={(n) => updateNotes(booking.phone, n)}
-          onClose={() => setShowNotes(false)}
-        />
-      )}
     </>
   );
 }
