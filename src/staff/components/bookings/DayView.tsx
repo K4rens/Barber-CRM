@@ -10,8 +10,8 @@ import {
 } from "../../types/bookings";
 import type { ScheduleState } from "../../layout/StaffLayout";
 
-const DAY_START = 8;
-const DAY_END = 21;
+const DAY_START_DEFAULT = 8;
+const DAY_END_DEFAULT = 21;
 
 interface Props {
   dayOffset: number;
@@ -25,7 +25,6 @@ function padTime(h: number, m: number) {
   return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
 }
 
-/** Локальная дата без сдвига UTC */
 function toLocalIso(d: Date): string {
   return (
     d.getFullYear() +
@@ -58,7 +57,6 @@ export default function DayView({
   const targetDateIso = toLocalIso(targetDate);
   const isSunday = targetDate.getDay() === 0;
 
-  // Определяем weekOffset и dayIndex для targetDate
   const todayForSchedule = new Date();
   todayForSchedule.setHours(0, 0, 0, 0);
   const targetDay = targetDate.getDay();
@@ -78,14 +76,21 @@ export default function DayView({
   const label = `${targetDate.getDate()} ${MONTHS[targetDate.getMonth()]}, ${DAYS_FULL[targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1]}`;
   const monthLabel = `${MONTHS_NOM[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
 
+  const gridStart = dayShift ? parseInt(dayShift.start) : DAY_START_DEFAULT;
+  const gridEnd = dayShift
+    ? dayShift.end === "00:00"
+      ? 24
+      : parseInt(dayShift.end)
+    : DAY_END_DEFAULT;
+
   const slots = useMemo(() => {
     const s: string[] = [];
-    for (let h = DAY_START; h < DAY_END; h++) {
+    for (let h = gridStart; h < gridEnd; h++) {
       for (let m = 0; m < 60; m += 15) s.push(padTime(h, m));
     }
-    s.push(padTime(DAY_END, 0));
+    s.push(padTime(gridEnd === 24 ? 23 : gridEnd, gridEnd === 24 ? 59 : 0));
     return s;
-  }, []);
+  }, [gridStart, gridEnd]);
 
   const dayBookings = useMemo(
     () =>
@@ -117,7 +122,7 @@ export default function DayView({
     let free = 0;
     for (let i = 0; i < 12; i++) {
       const total = h * 60 + m + i * 15;
-      if (total >= DAY_END * 60) break;
+      if (total >= gridEnd * 60) break;
       const key = padTime(Math.floor(total / 60), total % 60);
       if (occupied[key]) break;
       free++;
@@ -186,7 +191,7 @@ export default function DayView({
                       const [bh, bm] = booking.start.split(":").map(Number);
                       const slotsCount = Math.min(
                         dur / 15,
-                        (DAY_END * 60 - bh * 60 - bm) / 15,
+                        (gridEnd * 60 - bh * 60 - bm) / 15,
                       );
                       return (
                         <div

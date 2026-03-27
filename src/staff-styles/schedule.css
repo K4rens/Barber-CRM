@@ -21,6 +21,7 @@
 .schedule-day__hours { font-size: 13px; font-weight: 400; }
 .schedule-day__off   { font-size: 11px; color: #ccc; }
 .schedule-day__bookings-note { font-size: 11px; color: #aaa; }
+.schedule-day__past-note { font-size: 10px; color: #ccc; margin-top: 4px; }
 
 .schedule-day__edit,
 .schedule-day__add {
@@ -181,8 +182,8 @@
 }
 
 
-
 @media (max-width: 768px) {
+
   .schedule-grid {
     grid-template-columns: 1fr 1fr;
   }

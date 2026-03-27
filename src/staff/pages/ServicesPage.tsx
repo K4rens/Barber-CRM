@@ -1,13 +1,7 @@
 import { useState } from "react";
+import { useStaffContext } from "../layout/StaffLayout";
+import type { Service } from "../layout/StaffLayout";
 import "../../staff-styles/services.css";
-
-interface Service {
-  id: number;
-  name: string;
-  duration: number; 
-  price: number;
-  active: boolean;
-}
 
 const DURATION_OPTIONS = [
   { value: 15, label: "15 мин" },
@@ -25,13 +19,6 @@ function formatDuration(min: number): string {
   const m = min % 60;
   return m ? `${h} ч ${m} мин` : `${h} ч`;
 }
-
-const INITIAL_SERVICES: Service[] = [
-  { id: 1, name: "Стрижка", duration: 45, price: 1200, active: true },
-  { id: 2, name: "Борода", duration: 30, price: 800, active: true },
-  { id: 3, name: "Стрижка + борода", duration: 60, price: 1800, active: true },
-  { id: 4, name: "Fade", duration: 60, price: 1500, active: false },
-];
 
 interface ModalProps {
   service: Service | null; // null = новая
@@ -136,8 +123,10 @@ function ServiceModal({ service, onSave, onClose }: ModalProps) {
 }
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
-  const [nextId, setNextId] = useState(5);
+  const { services, setServices } = useStaffContext();
+  const [nextId, setNextId] = useState(() =>
+    services.length > 0 ? Math.max(...services.map((s) => s.id)) + 1 : 1,
+  );
   const [editing, setEditing] = useState<Service | null | undefined>(undefined);
 
   const handleSave = (data: Omit<Service, "id">) => {

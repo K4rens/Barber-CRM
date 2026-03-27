@@ -19,20 +19,25 @@ export interface Client {
   notes: string;
 }
 
-const INITIAL_CLIENTS: Client[] = [
-  { id: 1, name: "Алексей Смирнов", phone: "+7 916 123-45-67", notes: "" },
-  { id: 2, name: "Иван Морозов", phone: "+7 925 321-54-76", notes: "" },
-  { id: 3, name: "Дмитрий Козлов", phone: "+7 903 987-65-43", notes: "" },
-  { id: 4, name: "Сергей Новиков", phone: "+7 916 444-55-66", notes: "" },
-  { id: 5, name: "Михаил Зайцев", phone: "+7 903 777-88-99", notes: "" },
-  { id: 6, name: "Павел Волков", phone: "+7 925 555-66-77", notes: "" },
-];
+export interface Service {
+  id: number;
+  name: string;
+  duration: number;
+  price: number;
+  active: boolean;
+}
+
+const INITIAL_CLIENTS: Client[] = [];
+const INITIAL_SERVICES: Service[] = [];
 
 export type ScheduleState = Record<number, Record<number, Shift | null>>;
 
 export type StaffOutletContext = {
   clients: Client[];
+  setClients: React.Dispatch<React.SetStateAction<Client[]>>;
   updateNotes: (phone: string, notes: string) => void;
+  services: Service[];
+  setServices: React.Dispatch<React.SetStateAction<Service[]>>;
   schedule: ScheduleState;
   setSchedule: React.Dispatch<React.SetStateAction<ScheduleState>>;
   templates: Template[];
@@ -144,6 +149,7 @@ export default function StaffLayout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
+  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
   const [schedule, setSchedule] = useState<ScheduleState>({});
   const [templates, setTemplates] = useState<Template[]>([]);
   const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
@@ -176,7 +182,10 @@ export default function StaffLayout() {
 
   const outletContext = {
     clients,
+    setClients,
     updateNotes,
+    services,
+    setServices,
     schedule,
     setSchedule,
     templates,

@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Booking } from "../../types/bookings";
-
-const SERVICES = [
-  { name: "Борода", duration: 30 },
-  { name: "Стрижка", duration: 45 },
-  { name: "Fade", duration: 60 },
-  { name: "Стрижка + борода", duration: 60 },
-];
+import { useStaffContext } from "../../layout/StaffLayout";
 
 const TIME_SLOTS: string[] = [];
 for (let h = 8; h < 21; h++) {
@@ -62,6 +56,10 @@ export default function NewBookingModal({
   onClose,
   onSave,
 }: Props) {
+  const { services } = useStaffContext();
+  // Только активные услуги
+  const activeServices = services.filter((s) => s.active);
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [date, setDate] = useState(presetDate ?? toLocalIso(new Date()));
@@ -70,7 +68,7 @@ export default function NewBookingModal({
   const [error, setError] = useState("");
 
   const maxDurMinutes = freeSlots ? freeSlots * 15 : 999;
-  const selectedService = SERVICES.find((s) => s.name === service);
+  const selectedService = activeServices.find((s) => s.name === service);
   const duration = selectedService?.duration ?? null;
   const timeFixed = !!presetTime;
 
@@ -126,7 +124,7 @@ export default function NewBookingModal({
       end: endStr,
       duration: dur,
       status: "pending",
-      date, 
+      date,
     });
     onClose();
   };
@@ -204,22 +202,31 @@ export default function NewBookingModal({
           <div className="nb-row">
             <div className="nb-field">
               <label className="nb-field__label">Услуга</label>
-              <select
-                className="nb-field__input"
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-              >
-                <option value="">— выбрать —</option>
-                {SERVICES.map((s) => (
-                  <option
-                    key={s.name}
-                    value={s.name}
-                    disabled={s.duration > maxDurMinutes}
-                  >
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+              {activeServices.length === 0 ? (
+                <div
+                  className="nb-field__input nb-field__input--readonly"
+                  style={{ color: "#bbb" }}
+                >
+                  Нет активных услуг
+                </div>
+              ) : (
+                <select
+                  className="nb-field__input"
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                >
+                  <option value="">— выбрать —</option>
+                  {activeServices.map((s) => (
+                    <option
+                      key={s.id}
+                      value={s.name}
+                      disabled={s.duration > maxDurMinutes}
+                    >
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="nb-field">
               <label className="nb-field__label">Длительность</label>

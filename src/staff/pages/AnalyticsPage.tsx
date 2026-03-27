@@ -1,75 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useStaffContext } from "../layout/StaffLayout";
+import type { Booking } from "../types/bookings";
 import "../../staff-styles/analytics.css";
 
 type Period = "day" | "month" | "all";
-
-interface PeriodData {
-  revenue: string;
-  avgCheck: string;
-  hours: string;
-  occupancy: string;
-  cancelRate: string;
-  pending: string;
-  total: string;
-  completed: string;
-  cancelled: string;
-  noShow: string;
-  top: { name: string; width: string; count: string }[];
-}
-
-const DATA: Record<Period, PeriodData> = {
-  day: {
-    revenue: "4 200 ₽",
-    avgCheck: "1 400 ₽",
-    hours: "6",
-    occupancy: "62%",
-    cancelRate: "25%",
-    pending: "1",
-    total: "4",
-    completed: "3",
-    cancelled: "1",
-    noShow: "0",
-    top: [
-      { name: "Стрижка", width: "80%", count: "2" },
-      { name: "Борода", width: "40%", count: "1" },
-    ],
-  },
-  month: {
-    revenue: "58 000 ₽",
-    avgCheck: "1 381 ₽",
-    hours: "96",
-    occupancy: "78%",
-    cancelRate: "10%",
-    pending: "5",
-    total: "50",
-    completed: "42",
-    cancelled: "5",
-    noShow: "3",
-    top: [
-      { name: "Стрижка", width: "80%", count: "28" },
-      { name: "Стрижка + борода", width: "45%", count: "16" },
-      { name: "Борода", width: "25%", count: "9" },
-    ],
-  },
-  all: {
-    revenue: "420 000 ₽",
-    avgCheck: "1 350 ₽",
-    hours: "520",
-    occupancy: "74%",
-    cancelRate: "11%",
-    pending: "8",
-    total: "220",
-    completed: "180",
-    cancelled: "25",
-    noShow: "15",
-    top: [
-      { name: "Стрижка", width: "80%", count: "120" },
-      { name: "Стрижка + борода", width: "55%", count: "82" },
-      { name: "Борода", width: "35%", count: "54" },
-      { name: "Fade", width: "20%", count: "28" },
-    ],
-  },
-};
 
 const PERIOD_LABELS: Record<Period, string> = {
   day: "День",
@@ -77,9 +11,99 @@ const PERIOD_LABELS: Record<Period, string> = {
   all: "Всё время",
 };
 
+const SERVICE_PRICES: Record<string, number> = {
+  Стрижка: 1200,
+  Борода: 800,
+  "Стрижка + борода": 1800,
+  Fade: 1500,
+};
+
+function toLocalIso(d: Date): string {
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+}
+
+function filterByPeriod(bookings: Booking[], period: Period): Booking[] {
+  const now = new Date();
+  const todayIso = toLocalIso(now);
+
+  if (period === "day") {
+    return bookings.filter((b) => b.date === todayIso);
+  }
+  if (period === "month") {
+    const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return bookings.filter((b) => b.date?.startsWith(prefix));
+  }
+  return bookings; // all
+}
+
+function formatMoney(n: number): string {
+  return n.toLocaleString("ru-RU") + " ₽";
+}
+
 export default function AnalyticsPage() {
+  const { bookings } = useStaffContext();
   const [period, setPeriod] = useState<Period>("month");
-  const d = DATA[period];
+
+  const filtered = useMemo(
+    () => filterByPeriod(bookings, period),
+    [bookings, period],
+  );
+
+  const stats = useMemo(() => {
+    const total = filtered.length;
+    const completed = filtered.filter((b) => b.status === "completed");
+    const cancelled = filtered.filter((b) => b.status === "cancelled").length;
+    const noShow = filtered.filter((b) => b.status === "no_show").length;
+    const pending = filtered.filter((b) => b.status === "pending").length;
+
+    const revenue = completed.reduce(
+      (sum, b) => sum + (SERVICE_PRICES[b.service] ?? 0),
+      0,
+    );
+
+    const avgCheck =
+      completed.length > 0 ? Math.round(revenue / completed.length) : 0;
+
+    const hours = Math.round(
+      completed.reduce((sum, b) => sum + (b.duration ?? 45), 0) / 60,
+    );
+
+    const serviceCounts: Record<string, number> = {};
+    filtered
+      .filter((b) => b.status === "completed")
+      .forEach((b) => {
+        serviceCounts[b.service] = (serviceCounts[b.service] ?? 0) + 1;
+      });
+    const topServices = Object.entries(serviceCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
+    const maxCount = topServices[0]?.[1] ?? 1;
+
+    const cancelRate =
+      total > 0 ? Math.round(((cancelled + noShow) / total) * 100) : 0;
+
+    return {
+      total,
+      completed: completed.length,
+      cancelled,
+      noShow,
+      pending,
+      revenue,
+      avgCheck,
+      hours,
+      topServices,
+      maxCount,
+      cancelRate,
+    };
+  }, [filtered]);
+
+  const isEmpty = stats.total === 0;
 
   return (
     <div>
@@ -102,26 +126,49 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="stat-cards">
-        <StatCard label="Выручка" value={d.revenue} />
-        <StatCard label="Средний чек" value={d.avgCheck} />
-        <StatCard label="Часов отработано" value={d.hours} />
-        <StatCard label="Загруженность" value={d.occupancy} />
-        <StatCard label="Процент отмен" value={d.cancelRate} />
-        <StatCard label="Текущих записей" value={d.pending} />
+        <StatCard
+          label="Выручка"
+          value={isEmpty ? "—" : formatMoney(stats.revenue)}
+        />
+        <StatCard
+          label="Средний чек"
+          value={isEmpty ? "—" : formatMoney(stats.avgCheck)}
+        />
+        <StatCard
+          label="Часов отработано"
+          value={isEmpty ? "—" : String(stats.hours)}
+        />
+        <StatCard label="Завершено записей" value={String(stats.completed)} />
+        <StatCard
+          label="Процент отмен"
+          value={isEmpty ? "—" : `${stats.cancelRate}%`}
+        />
+        <StatCard label="Текущих записей" value={String(stats.pending)} />
       </div>
 
       <div className="analytics-section">
+        {/* Топ услуг */}
         <div className="analytics-block">
           <div className="analytics-block__title">Топ услуг</div>
-          {d.top.map((s) => (
-            <div key={s.name} className="top-service">
-              <span className="top-service__name">{s.name}</span>
-              <div className="top-service__bar">
-                <div style={{ width: s.width }} />
-              </div>
-              <span className="top-service__count">{s.count}</span>
+          {stats.topServices.length === 0 ? (
+            <div style={{ fontSize: 13, color: "#bbb", padding: "8px 0" }}>
+              Нет данных
             </div>
-          ))}
+          ) : (
+            stats.topServices.map(([name, count]) => (
+              <div key={name} className="top-service">
+                <span className="top-service__name">{name}</span>
+                <div className="top-service__bar">
+                  <div
+                    style={{
+                      width: `${Math.round((count / stats.maxCount) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <span className="top-service__count">{count}</span>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="analytics-block">
@@ -129,19 +176,19 @@ export default function AnalyticsPage() {
           <div className="booking-stats">
             <div className="booking-stat">
               <span className="booking-stat__label">Всего</span>
-              <span className="booking-stat__value">{d.total}</span>
+              <span className="booking-stat__value">{stats.total}</span>
             </div>
             <div className="booking-stat">
               <span className="booking-stat__label">Завершено</span>
-              <span className="booking-stat__value">{d.completed}</span>
+              <span className="booking-stat__value">{stats.completed}</span>
             </div>
             <div className="booking-stat">
               <span className="booking-stat__label">Отменено</span>
-              <span className="booking-stat__value">{d.cancelled}</span>
+              <span className="booking-stat__value">{stats.cancelled}</span>
             </div>
             <div className="booking-stat">
               <span className="booking-stat__label">Не пришли</span>
-              <span className="booking-stat__value">{d.noShow}</span>
+              <span className="booking-stat__value">{stats.noShow}</span>
             </div>
           </div>
         </div>

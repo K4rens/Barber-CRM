@@ -1,5 +1,3 @@
-// src/staff/pages/ClientsPage.tsx
-
 import { useState, useMemo } from "react";
 import { useStaffContext } from "../layout/StaffLayout";
 import type { Client } from "../layout/StaffLayout";
@@ -12,35 +10,7 @@ interface Visit {
   status: "completed" | "cancelled" | "no_show" | "pending";
 }
 
-const MOCK_VISITS: Visit[] = [
-  { clientId: 1, date: "2026-03-20", service: "Стрижка", status: "completed" },
-  { clientId: 1, date: "2026-03-05", service: "Борода", status: "completed" },
-  {
-    clientId: 1,
-    date: "2026-02-18",
-    service: "Стрижка + борода",
-    status: "completed",
-  },
-  { clientId: 1, date: "2026-01-30", service: "Стрижка", status: "no_show" },
-  { clientId: 1, date: "2026-01-10", service: "Стрижка", status: "completed" },
-  { clientId: 2, date: "2026-03-18", service: "Fade", status: "completed" },
-  { clientId: 2, date: "2026-02-28", service: "Стрижка", status: "cancelled" },
-  { clientId: 2, date: "2026-02-10", service: "Fade", status: "completed" },
-  { clientId: 3, date: "2026-03-15", service: "Стрижка", status: "completed" },
-  { clientId: 3, date: "2026-03-01", service: "Борода", status: "completed" },
-  {
-    clientId: 3,
-    date: "2026-02-20",
-    service: "Стрижка + борода",
-    status: "completed",
-  },
-  { clientId: 3, date: "2026-02-05", service: "Стрижка", status: "no_show" },
-  { clientId: 4, date: "2026-03-10", service: "Fade", status: "completed" },
-  { clientId: 5, date: "2026-03-08", service: "Стрижка", status: "completed" },
-  { clientId: 5, date: "2026-02-22", service: "Борода", status: "completed" },
-  { clientId: 6, date: "2026-03-05", service: "Стрижка", status: "completed" },
-  { clientId: 6, date: "2026-02-15", service: "Стрижка", status: "completed" },
-];
+const MOCK_VISITS: Visit[] = [];
 
 const STATUS_LABELS: Record<string, string> = {
   completed: "Выполнено",
@@ -149,6 +119,8 @@ function HistoryModal({
   );
 }
 
+// ── Модалка описания ──────────────────────────────────────────
+
 function NotesModal({
   client,
   onSave,
@@ -202,6 +174,8 @@ function NotesModal({
     </>
   );
 }
+
+// ── Страница ──────────────────────────────────────────────────
 
 export default function ClientsPage() {
   const { clients, updateNotes } = useStaffContext();

@@ -63,8 +63,14 @@ function headerMonth(
 }
 
 export default function BookingsPage() {
-  const { bookings, setBookings, handleStatusChange, schedule } =
-    useStaffContext();
+  const {
+    bookings,
+    setBookings,
+    handleStatusChange,
+    schedule,
+    clients,
+    setClients,
+  } = useStaffContext();
   const [view, setView] = useState<View>("week");
   const [weekOffset, setWeekOffset] = useState(0);
   const [dayOffset, setDayOffset] = useState(0);
@@ -225,6 +231,20 @@ export default function BookingsPage() {
           }}
           onSave={(booking) => {
             setBookings((prev) => [...prev, { ...booking, id: Date.now() }]);
+            setClients((prev) => {
+              if (prev.some((c) => c.phone === booking.phone)) return prev;
+              const newId =
+                prev.length > 0 ? Math.max(...prev.map((c) => c.id)) + 1 : 1;
+              return [
+                ...prev,
+                {
+                  id: newId,
+                  name: booking.name,
+                  phone: booking.phone,
+                  notes: "",
+                },
+              ];
+            });
           }}
         />
       )}
