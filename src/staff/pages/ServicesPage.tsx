@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStaffContext } from "../layout/StaffLayout";
 import type { Service } from "../layout/StaffLayout";
+import { http } from "../../api/client";
 import "../../staff-styles/services.css";
 
 const DURATION_OPTIONS = [
@@ -20,20 +21,31 @@ function formatDuration(min: number): string {
   return m ? `${h} ч ${m} мин` : `${h} ч`;
 }
 
+function apiToService(s: any): Service {
+  return {
+    id: s.service_id,
+    name: s.name,
+    duration: s.duration_minutes,
+    price: s.price,
+    active: s.is_active,
+  };
+}
+
 interface ModalProps {
-  service: Service | null; // null = новая
-  onSave: (s: Omit<Service, "id">) => void;
+  service: Service | null;
+  onSave: (s: Omit<Service, "id">) => Promise<void>;
   onClose: () => void;
 }
 
 function ServiceModal({ service, onSave, onClose }: ModalProps) {
   const [name, setName] = useState(service?.name ?? "");
-  const [price, setPrice] = useState(service?.price ?? "");
+  const [price, setPrice] = useState<string | number>(service?.price ?? "");
   const [duration, setDuration] = useState(service?.duration ?? 45);
   const [active, setActive] = useState(service?.active ?? true);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       setError("Введите название");
       return;
@@ -43,8 +55,15 @@ function ServiceModal({ service, onSave, onClose }: ModalProps) {
       setError("Введите корректную цену");
       return;
     }
-    onSave({ name: name.trim(), price: p, duration, active });
-    onClose();
+    setLoading(true);
+    try {
+      await onSave({ name: name.trim(), price: p, duration, active });
+      onClose();
+    } catch {
+      setError("Ошибка при сохранении");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,8 +132,12 @@ function ServiceModal({ service, onSave, onClose }: ModalProps) {
             </div>
           </div>
           {error && <div className="nb-error">{error}</div>}
-          <button className="staff-btn staff-btn--primary" onClick={handleSave}>
-            Сохранить
+          <button
+            className="staff-btn staff-btn--primary"
+            onClick={handleSave}
+            disabled={loading}
+          >
+            {loading ? "Сохранение..." : "Сохранить"}
           </button>
         </div>
       </div>
@@ -124,24 +147,52 @@ function ServiceModal({ service, onSave, onClose }: ModalProps) {
 
 export default function ServicesPage() {
   const { services, setServices } = useStaffContext();
-  const [nextId, setNextId] = useState(() =>
-    services.length > 0 ? Math.max(...services.map((s) => s.id)) + 1 : 1,
-  );
   const [editing, setEditing] = useState<Service | null | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = (data: Omit<Service, "id">) => {
+  useEffect(() => {
+    http
+      .get("/staff/services", { params: { include_inactive: true } })
+      .then(({ data }) => {
+        setServices(data.services.map(apiToService));
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async (data: Omit<Service, "id">) => {
+    const body = {
+      name: data.name,
+      price: data.price,
+      duration_minutes: data.duration,
+    };
     if (editing) {
+      const { data: updated } = await http.put(
+        `/staff/services/${editing.id}`,
+        {
+          ...body,
+          is_active: data.active,
+        },
+      );
       setServices((prev) =>
-        prev.map((s) => (s.id === editing.id ? { ...s, ...data } : s)),
+        prev.map((s) => (s.id === editing.id ? apiToService(updated) : s)),
       );
     } else {
-      setServices((prev) => [...prev, { id: nextId, ...data }]);
-      setNextId((n) => n + 1);
+      const { data: created } = await http.post("/staff/services", body);
+      setServices((prev) => [...prev, apiToService(created)]);
     }
   };
 
-  const handleDelete = (id: number) =>
+  const handleDelete = async (id: string) => {
+    await http.delete(`/staff/services/${id}`);
     setServices((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  if (loading)
+    return (
+      <div style={{ padding: 40, color: "#aaa", fontSize: 13 }}>
+        Загрузка...
+      </div>
+    );
 
   return (
     <div>
@@ -191,6 +242,18 @@ export default function ServicesPage() {
             </div>
           </div>
         ))}
+        {services.length === 0 && (
+          <div
+            style={{
+              padding: "20px",
+              fontSize: 13,
+              color: "#aaa",
+              textAlign: "center",
+            }}
+          >
+            Нет услуг
+          </div>
+        )}
       </div>
 
       {editing !== undefined && (

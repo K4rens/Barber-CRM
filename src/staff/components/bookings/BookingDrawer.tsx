@@ -1,8 +1,22 @@
+// src/staff/components/bookings/BookingDrawer.tsx
 import React from "react";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useStaffContext } from "../../layout/StaffLayout";
 import type { Booking, BookingStatus } from "../../types/bookings";
 import { STATUS_MAP, MOCK_BOOKINGS } from "../../types/bookings";
+
+function DrawerPortal({ children }: { children: React.ReactNode }) {
+  return createPortal(
+    <div
+      className="staff-app"
+      style={{ position: "static", minHeight: "unset", display: "contents" }}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}
 
 interface Props {
   booking: Booking | null;
@@ -28,6 +42,7 @@ function formatDate(iso: string) {
   const [y, m, d] = iso.split("-");
   return `${d}.${m}.${y}`;
 }
+
 
 function HistoryModal({
   name,
@@ -55,13 +70,9 @@ function HistoryModal({
   const countLabel = count === 1 ? "визит" : count < 5 ? "визита" : "визитов";
 
   return (
-    <>
-      <div
-        className="staff-overlay"
-        style={{ zIndex: 201 }}
-        onClick={onClose}
-      />
-      <div className="staff-modal" style={{ width: 420, zIndex: 202 }}>
+    <DrawerPortal>
+      <div className="staff-overlay" onClick={onClose} />
+      <div className="staff-modal" style={{ width: 420 }}>
         <div className="staff-modal__header">
           <span className="staff-modal__title">{name}</span>
           <button className="staff-modal__close" onClick={onClose}>
@@ -114,7 +125,7 @@ function HistoryModal({
           </button>
         </div>
       </div>
-    </>
+    </DrawerPortal>
   );
 }
 
@@ -132,13 +143,9 @@ function NotesModal({
   const [value, setValue] = useState(notes);
 
   return (
-    <>
-      <div
-        className="staff-overlay"
-        style={{ zIndex: 201 }}
-        onClick={onClose}
-      />
-      <div className="staff-modal" style={{ width: 380, zIndex: 202 }}>
+    <DrawerPortal>
+      <div className="staff-overlay" onClick={onClose} />
+      <div className="staff-modal" style={{ width: 380 }}>
         <div className="staff-modal__header">
           <span className="staff-modal__title">Описание клиента</span>
           <button className="staff-modal__close" onClick={onClose}>
@@ -174,10 +181,9 @@ function NotesModal({
           </button>
         </div>
       </div>
-    </>
+    </DrawerPortal>
   );
 }
-
 
 export default function BookingDrawer({
   booking,

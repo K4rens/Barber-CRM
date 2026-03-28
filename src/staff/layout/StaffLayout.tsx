@@ -20,7 +20,7 @@ export interface Client {
 }
 
 export interface Service {
-  id: number;
+  id: string;
   name: string;
   duration: number;
   price: number;
