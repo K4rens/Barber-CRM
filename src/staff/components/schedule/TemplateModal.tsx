@@ -3,7 +3,7 @@ import type { Shift, Template } from "../../types/schedule";
 import { DAYS_FULL } from "../../types/schedule";
 
 interface Props {
-  template: Template | null; // null = новый шаблон
+  template: Template | null; 
   onSave: (days: (Shift | null)[]) => void;
   onClose: () => void;
 }

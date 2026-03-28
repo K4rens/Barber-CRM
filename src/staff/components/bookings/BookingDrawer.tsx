@@ -1,4 +1,3 @@
-// src/staff/components/bookings/BookingDrawer.tsx
 import React from "react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
@@ -22,6 +21,7 @@ interface Props {
   booking: Booking | null;
   onClose: () => void;
   onStatusChange: (id: number, status: BookingStatus) => void;
+  onDelete?: (id: number) => void;
 }
 
 const STATUS_LABELS: { value: BookingStatus; label: string }[] = [
@@ -42,7 +42,6 @@ function formatDate(iso: string) {
   const [y, m, d] = iso.split("-");
   return `${d}.${m}.${y}`;
 }
-
 
 function HistoryModal({
   name,
@@ -189,6 +188,7 @@ export default function BookingDrawer({
   booking,
   onClose,
   onStatusChange,
+  onDelete,
 }: Props) {
   const { clients, updateNotes } = useStaffContext();
   const getNotes = (phone: string) =>
@@ -197,11 +197,13 @@ export default function BookingDrawer({
   const [showHistory, setShowHistory] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const prevIdRef = React.useRef(booking?.id);
   if (prevIdRef.current !== booking?.id) {
     prevIdRef.current = booking?.id;
     setShowStatusPicker(false);
+    setShowDeleteConfirm(false);
   }
 
   const isOpen = !!booking;
@@ -291,30 +293,106 @@ export default function BookingDrawer({
                 >
                   Завершить
                 </button>
-                <button
-                  className="drawer-btn drawer-btn--noshow"
-                  onClick={() => onStatusChange(booking.id, "no_show")}
-                >
-                  Не пришёл
-                </button>
-                <button
-                  className="drawer-btn drawer-btn--cancel"
-                  onClick={() => onStatusChange(booking.id, "cancelled")}
-                >
-                  Отменить
-                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    className="drawer-btn drawer-btn--noshow"
+                    style={{ flex: 1, padding: "7px", fontSize: "10px" }}
+                    onClick={() => onStatusChange(booking.id, "no_show")}
+                  >
+                    Не пришёл
+                  </button>
+                  <button
+                    className="drawer-btn drawer-btn--noshow"
+                    style={{ flex: 1, padding: "7px", fontSize: "10px" }}
+                    onClick={() => onStatusChange(booking.id, "cancelled")}
+                  >
+                    Отменить
+                  </button>
+                </div>
+                {!showDeleteConfirm ? (
+                  <button
+                    className="drawer-btn drawer-btn--danger"
+                    style={{
+                      fontSize: "10px",
+                      padding: "7px",
+                      color: "#c00",
+                      background: "#fff",
+                      border: "1.5px solid #f0d0d0",
+                    }}
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    Удалить запись
+                  </button>
+                ) : (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      className="drawer-btn drawer-btn--cancel"
+                      style={{ flex: 1, padding: "7px", fontSize: "10px" }}
+                      onClick={() => {
+                        onDelete?.(booking.id);
+                        onClose();
+                      }}
+                    >
+                      Да, удалить
+                    </button>
+                    <button
+                      className="drawer-btn drawer-btn--change"
+                      style={{ flex: 1, padding: "7px", fontSize: "10px" }}
+                      onClick={() => setShowDeleteConfirm(false)}
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
             {!isPending && (
               <div className="drawer__actions">
                 {!showStatusPicker ? (
-                  <button
-                    className="drawer-btn drawer-btn--change"
-                    onClick={() => setShowStatusPicker(true)}
-                  >
-                    Изменить статус
-                  </button>
+                  <>
+                    <button
+                      className="drawer-btn drawer-btn--change"
+                      onClick={() => setShowStatusPicker(true)}
+                    >
+                      Изменить статус
+                    </button>
+                    {!showDeleteConfirm ? (
+                      <button
+                        className="drawer-btn"
+                        style={{
+                          fontSize: "10px",
+                          padding: "7px",
+                          color: "#c00",
+                          background: "#fff",
+                          border: "1.5px solid #f0d0d0",
+                        }}
+                        onClick={() => setShowDeleteConfirm(true)}
+                      >
+                        Удалить запись
+                      </button>
+                    ) : (
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          className="drawer-btn drawer-btn--cancel"
+                          style={{ flex: 1, padding: "7px", fontSize: "10px" }}
+                          onClick={() => {
+                            onDelete?.(booking.id);
+                            onClose();
+                          }}
+                        >
+                          Да, удалить
+                        </button>
+                        <button
+                          className="drawer-btn drawer-btn--change"
+                          style={{ flex: 1, padding: "7px", fontSize: "10px" }}
+                          onClick={() => setShowDeleteConfirm(false)}
+                        >
+                          Отмена
+                        </button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <>
                     <p className="drawer__picker-label">
@@ -323,15 +401,7 @@ export default function BookingDrawer({
                     {STATUS_LABELS.map((s) => (
                       <button
                         key={s.value}
-                        className={`drawer-btn drawer-btn--${
-                          s.value === "completed"
-                            ? "complete"
-                            : s.value === "cancelled"
-                              ? "cancel"
-                              : s.value === "no_show"
-                                ? "noshow"
-                                : "change"
-                        }`}
+                        className={`drawer-btn drawer-btn--${s.value === "completed" ? "complete" : s.value === "cancelled" ? "cancel" : s.value === "no_show" ? "noshow" : "change"}`}
                         onClick={() => {
                           onStatusChange(booking.id, s.value);
                           setShowStatusPicker(false);
