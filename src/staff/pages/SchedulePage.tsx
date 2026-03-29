@@ -63,34 +63,10 @@ export default function SchedulePage() {
   const weekSchedule = getWeekSchedule(schedule, weekOffset);
 
   const loadWeek = useCallback(
-    async (offset: number) => {
-      if (schedule[offset] !== undefined) return;
-      setLoadingWeeks((prev) => new Set(prev).add(offset));
-      try {
-        const ws = getWeekStart(offset);
-        const week = toIsoWeek(ws);
-        const { data } = await http.get("/staff/schedule", {
-          params: { week },
-        });
-        const weekMap: Record<number, Shift | null> = {};
-        (data.days ?? []).forEach((day: any) => {
-          const date = new Date(day.date);
-          const dayOfWeek = date.getDay();
-          const idx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-          weekMap[idx] = { start: day.start_time, end: day.end_time };
-        });
-        setSchedule((prev) => ({ ...prev, [offset]: weekMap }));
-      } catch {
-        setSchedule((prev) => ({ ...prev, [offset]: {} }));
-      } finally {
-        setLoadingWeeks((prev) => {
-          const s = new Set(prev);
-          s.delete(offset);
-          return s;
-        });
-      }
+    async (_offset: number) => {
+      setSchedule((prev) => ({ ...prev, [_offset]: prev[_offset] ?? {} }));
     },
-    [schedule, setSchedule],
+    [setSchedule],
   );
 
   useEffect(() => {
