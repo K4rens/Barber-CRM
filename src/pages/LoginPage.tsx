@@ -21,12 +21,14 @@ export default function LoginPage() {
     setIsPending(true);
 
     try {
-      const { access_token, refresh_token } = await authApi.login(
+      const { access_token, refresh_token, barber } = await authApi.login(
         login.trim(),
         password,
       );
       tokenStorage.set(access_token);
       tokenStorage.setRefresh(refresh_token);
+      if (barber?.name) tokenStorage.setBarberName(barber.name);
+      if (barber?.barber_id) tokenStorage.setBarberId(barber.barber_id);
       navigate("/staff/bookings");
     } catch (err) {
       if (err instanceof ApiException && err.status === 401) {
@@ -77,7 +79,6 @@ export default function LoginPage() {
                 onClick={() => setShowPassword((v) => !v)}
               >
                 {showPassword ? (
-                  
                   <svg
                     width="16"
                     height="16"
@@ -90,7 +91,6 @@ export default function LoginPage() {
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 ) : (
-                  
                   <svg
                     width="16"
                     height="16"

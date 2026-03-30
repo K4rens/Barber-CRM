@@ -1,12 +1,19 @@
 import { http } from "./client";
-import type { Barber, Booking, CreateBookingDto, Service, Slot } from "./types";
+import type {
+  Barber,
+  Booking,
+  CreateBookingDto,
+  Service,
+  Slot,
+  ScheduleDay,
+  UpsertScheduleDayDto,
+} from "./types";
 
 export const publicApi = {
   getBarbers: async (): Promise<Barber[]> => {
     const { data } = await http.get<{ barbers: Barber[] }>("/barbers");
     return data.barbers;
   },
-
 
   getBarberServices: async (barberId: string): Promise<Service[]> => {
     const { data } = await http.get<{ services: Service[] }>(
@@ -15,11 +22,6 @@ export const publicApi = {
     return data.services;
   },
 
-  /**
-   * Свободные слоты барбера.
-   * @param date     'YYYY-MM-DD' — если не передан, вернёт ближайший доступный день
-   * @param serviceId UUID — если передан, фильтрует слоты под длительность услуги
-   */
   getFreeSlots: async (
     barberId: string,
     date?: string,
@@ -34,7 +36,6 @@ export const publicApi = {
     });
     return { date: data.date, slots: data.slots };
   },
-
 
   createBooking: async (dto: CreateBookingDto): Promise<Booking> => {
     const { data } = await http.post<Booking>("/bookings", dto);
@@ -55,5 +56,40 @@ export const authApi = {
 
   logout: async (refreshToken: string): Promise<void> => {
     await http.post("/auth/logout", { refresh_token: refreshToken });
+  },
+};
+
+export const staffApi = {
+  getSchedule: async (
+    week: string,
+  ): Promise<{ week: string; days: ScheduleDay[] }> => {
+    const { data } = await http.get<{ week: string; days: ScheduleDay[] }>(
+      "/staff/schedule",
+      { params: { week } },
+    );
+    return data;
+  },
+
+  upsertScheduleDay: async (
+    date: string,
+    dto: UpsertScheduleDayDto,
+  ): Promise<ScheduleDay> => {
+    const { data } = await http.put<ScheduleDay>(
+      `/staff/schedule/${date}`,
+      dto,
+    );
+    return data;
+  },
+
+  deleteScheduleDay: async (date: string): Promise<void> => {
+    await http.delete(`/staff/schedule/${date}`);
+  },
+
+  getSlots: async (date: string): Promise<{ date: string; slots: Slot[] }> => {
+    const { data } = await http.get<{ date: string; slots: Slot[] }>(
+      "/staff/slots",
+      { params: { date } },
+    );
+    return data;
   },
 };

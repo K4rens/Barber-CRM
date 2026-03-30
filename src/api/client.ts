@@ -5,17 +5,26 @@ import axios, {
 } from "axios";
 import type { ApiError } from "./types";
 
+
 const TOKEN_KEY = "barber_access_token";
 const REFRESH_KEY = "barber_refresh_token";
+const BARBER_NAME_KEY = "barber_name";
+const BARBER_ID_KEY = "barber_id";
 
 export const tokenStorage = {
   get: () => localStorage.getItem(TOKEN_KEY),
   set: (t: string) => localStorage.setItem(TOKEN_KEY, t),
   getRefresh: () => localStorage.getItem(REFRESH_KEY),
   setRefresh: (t: string) => localStorage.setItem(REFRESH_KEY, t),
+  getBarberName: () => localStorage.getItem(BARBER_NAME_KEY),
+  setBarberName: (name: string) => localStorage.setItem(BARBER_NAME_KEY, name),
+  getBarberId: () => localStorage.getItem(BARBER_ID_KEY),
+  setBarberId: (id: string) => localStorage.setItem(BARBER_ID_KEY, id),
   clear: () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_KEY);
+    localStorage.removeItem(BARBER_NAME_KEY);
+    localStorage.removeItem(BARBER_ID_KEY);
   },
 };
 
@@ -35,6 +44,7 @@ export const http: AxiosInstance = axios.create({
   baseURL: "/api/v1",
   headers: { "Content-Type": "application/json" },
 });
+
 
 http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = tokenStorage.get();
@@ -112,7 +122,6 @@ http.interceptors.response.use(
     return Promise.reject(normalizeError(error));
   },
 );
-
 
 function normalizeError(error: AxiosError<ApiError>): ApiException {
   const status = error.response?.status ?? 0;

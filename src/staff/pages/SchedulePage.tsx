@@ -3,7 +3,7 @@ import type { Shift, Template } from "../types/schedule";
 import { DAYS_FULL, DAYS_SHORT, getWeekSchedule } from "../types/schedule";
 import { getWeekStart, MONTHS, MONTHS_NOM } from "../types/bookings";
 import { useStaffContext } from "../layout/StaffLayout";
-import { http } from "../../api/client";
+import { staffApi } from "../../api/endpoints";
 import ShiftModal from "../components/schedule/ShiftModal";
 import TemplateModal from "../components/schedule/TemplateModal";
 import "../../staff-styles/schedule.css";
@@ -31,6 +31,28 @@ function dayIsoFromWeekStart(weekStart: Date, i: number): string {
     "-" +
     String(d.getDate()).padStart(2, "0")
   );
+}
+
+function apiDaysToShifts(
+  days: Array<{
+    date: string;
+    start_time: string;
+    end_time: string;
+  }>,
+  weekStart: Date,
+): Record<number, Shift | null> {
+  const result: Record<number, Shift | null> = {};
+  for (let i = 0; i < 7; i++) {
+    const iso = dayIsoFromWeekStart(weekStart, i);
+    const found = days.find((d) => d.date === iso);
+    result[i] = found
+      ? {
+          start: found.start_time.slice(0, 5),
+          end: found.end_time.slice(0, 5),
+        }
+      : null;
+  }
+  return result;
 }
 
 export default function SchedulePage() {
@@ -64,9 +86,28 @@ export default function SchedulePage() {
 
   const loadWeek = useCallback(
     async (_offset: number) => {
-      setSchedule((prev) => ({ ...prev, [_offset]: prev[_offset] ?? {} }));
+      if (schedule[_offset] !== undefined) return;
+
+      setLoadingWeeks((prev) => new Set(prev).add(_offset));
+
+      const ws = getWeekStart(_offset);
+      const isoWeek = toIsoWeek(ws);
+
+      try {
+        const result = await staffApi.getSchedule(isoWeek);
+        const shifts = apiDaysToShifts(result.days, ws);
+        setSchedule((prev) => ({ ...prev, [_offset]: shifts }));
+      } catch {
+        setSchedule((prev) => ({ ...prev, [_offset]: prev[_offset] ?? {} }));
+      } finally {
+        setLoadingWeeks((prev) => {
+          const next = new Set(prev);
+          next.delete(_offset);
+          return next;
+        });
+      }
     },
-    [setSchedule],
+    [schedule, setSchedule],
   );
 
   useEffect(() => {
@@ -94,13 +135,13 @@ export default function SchedulePage() {
   const updateShift = async (dayIndex: number, shift: Shift | null) => {
     const date = dayIso(dayIndex);
     if (shift) {
-      await http.put(`/staff/schedule/${date}`, {
+      await staffApi.upsertScheduleDay(date, {
         start_time: shift.start,
         end_time: shift.end,
         part_of_day: parseInt(shift.start) < 12 ? "am" : "pm",
       });
     } else {
-      await http.delete(`/staff/schedule/${date}`);
+      await staffApi.deleteScheduleDay(date);
     }
     setSchedule((prev) => ({
       ...prev,
@@ -111,21 +152,21 @@ export default function SchedulePage() {
   const applyTemplate = async (t: Template) => {
     const currentWeek = schedule[weekOffset] ?? {};
     const week: Record<number, Shift | null> = { ...currentWeek };
-    const promises: Promise<any>[] = [];
+    const promises: Promise<unknown>[] = [];
     t.days.forEach((shift, i) => {
       if (pendingBookingsForDay(i).length === 0 && !isPast(i)) {
         week[i] = shift;
         const date = dayIso(i);
         if (shift) {
           promises.push(
-            http.put(`/staff/schedule/${date}`, {
+            staffApi.upsertScheduleDay(date, {
               start_time: shift.start,
               end_time: shift.end,
               part_of_day: parseInt(shift.start) < 12 ? "am" : "pm",
             }),
           );
         } else {
-          promises.push(http.delete(`/staff/schedule/${date}`).catch(() => {}));
+          promises.push(staffApi.deleteScheduleDay(date).catch(() => {}));
         }
       }
     });

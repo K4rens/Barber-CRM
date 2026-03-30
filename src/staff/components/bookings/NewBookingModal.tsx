@@ -57,7 +57,6 @@ export default function NewBookingModal({
   onSave,
 }: Props) {
   const { services } = useStaffContext();
-  // Только активные услуги
   const activeServices = services.filter((s) => s.active);
 
   const [name, setName] = useState("");
@@ -75,7 +74,6 @@ export default function NewBookingModal({
   useEffect(() => {
     if (presetTime) setTime(presetTime);
   }, [presetTime]);
-
   useEffect(() => {
     if (presetDate) setDate(presetDate);
   }, [presetDate]);
@@ -112,14 +110,14 @@ export default function NewBookingModal({
 
     const [y, mo, day] = date.split("-").map(Number);
     const d = new Date(y, mo - 1, day);
-    const dayOfWeek = d.getDay();
-    const dayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const dayOffset = d.getDay() === 0 ? 6 : d.getDay() - 1;
 
     onSave({
       dayOffset,
       name: name.trim(),
       phone,
       service,
+      serviceId: selectedService?.id,
       start: time,
       end: endStr,
       duration: dur,

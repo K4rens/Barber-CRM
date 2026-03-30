@@ -6,7 +6,6 @@ import {
 } from "react-router-dom";
 import type { Shift, Template } from "../types/schedule";
 import type { Booking, BookingStatus } from "../types/bookings";
-import { MOCK_BOOKINGS } from "../types/bookings";
 import { tokenStorage } from "../../api/client";
 import { authApi } from "../../api/endpoints";
 import React, { useState } from "react";
@@ -14,6 +13,7 @@ import "./StaffLayout.css";
 
 export interface Client {
   id: number;
+  apiId?: string;
   name: string;
   phone: string;
   notes: string;
@@ -26,9 +26,6 @@ export interface Service {
   price: number;
   active: boolean;
 }
-
-const INITIAL_CLIENTS: Client[] = [];
-const INITIAL_SERVICES: Service[] = [];
 
 export type ScheduleState = Record<number, Record<number, Shift | null>>;
 
@@ -148,11 +145,17 @@ export default function StaffLayout() {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
-  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [schedule, setSchedule] = useState<ScheduleState>({});
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  const barberName = tokenStorage.getBarberName() ?? "Барбер";
+  const initials = barberName
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("");
 
   const handleStatusChange = (id: number, status: BookingStatus) =>
     setBookings((prev) =>
@@ -163,12 +166,6 @@ export default function StaffLayout() {
     setClients((prev) =>
       prev.map((c) => (c.phone === phone ? { ...c, notes } : c)),
     );
-
-  const barberName = "Артём Волков";
-  const initials = barberName
-    .split(" ")
-    .map((n) => n[0])
-    .join("");
 
   const handleLogout = async () => {
     try {

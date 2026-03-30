@@ -1,3 +1,5 @@
+// src/staff/components/bookings/WeekView.tsx
+
 import { useMemo } from "react";
 import type { Booking } from "../../types/bookings";
 import {
@@ -5,7 +7,6 @@ import {
   MONTHS,
   MONTHS_NOM,
   STATUS_CLASS,
-  PRICE_MAP,
   getWeekStart,
   shortName,
 } from "../../types/bookings";
@@ -84,11 +85,13 @@ export default function WeekView({
         {monthLabel}
       </div>
       <div className="week-calendar">
+        {/* Заголовки дней */}
         <div className="week-calendar__head">
           {days.map((d, i) => {
             const isToday = d.getTime() === today.getTime();
             const weekScheduleForDay = schedule[weekOffset] ?? {};
             const shift = weekScheduleForDay[i];
+            // undefined = не задано (используем DEFAULT), null = выходной, Shift = рабочий
             const hasBookings = dayBookings(days[i]).length > 0;
             const isOff =
               shift === null || (shift === undefined && !hasBookings);
@@ -107,11 +110,13 @@ export default function WeekView({
           })}
         </div>
 
+        {/* Тело */}
         <div className="week-calendar__body">
           {days.map((_, i) => {
             const isToday = days[i].getTime() === today.getTime();
             const weekScheduleForDay = schedule[weekOffset] ?? {};
             const shift = weekScheduleForDay[i];
+            // undefined = не задано (используем DEFAULT), null = выходной, Shift = рабочий
             const hasBookings = dayBookings(days[i]).length > 0;
             const isOff =
               shift === null || (shift === undefined && !hasBookings);
@@ -136,11 +141,6 @@ export default function WeekView({
                       <span className="booking-card__service">{b.service}</span>
                       <span className="booking-card__bottom">
                         <span className="booking-card__time">{b.start}</span>
-                        {PRICE_MAP[b.service] && (
-                          <span className="booking-card__price">
-                            {PRICE_MAP[b.service]}
-                          </span>
-                        )}
                       </span>
                     </div>
                   ))
@@ -151,6 +151,7 @@ export default function WeekView({
         </div>
       </div>
 
+      {/* Лейбл недели снизу для навигации */}
       <div style={{ display: "none" }} id="week-label-data">
         {weekLabel}
       </div>
