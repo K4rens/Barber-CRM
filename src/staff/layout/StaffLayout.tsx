@@ -42,6 +42,8 @@ export type StaffOutletContext = {
   bookings: Booking[];
   setBookings: React.Dispatch<React.SetStateAction<Booking[]>>;
   handleStatusChange: (id: number, status: BookingStatus) => void;
+  loadedDates: Set<string>;
+  setLoadedDates: React.Dispatch<React.SetStateAction<Set<string>>>;
 };
 
 export function useStaffContext() {
@@ -150,6 +152,7 @@ export default function StaffLayout() {
   const [schedule, setSchedule] = useState<ScheduleState>({});
   const [templates, setTemplates] = useState<Template[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loadedDates, setLoadedDates] = useState<Set<string>>(new Set());
 
   const barberName = tokenStorage.getBarberName() ?? "Барбер";
   const initials = barberName
@@ -190,6 +193,8 @@ export default function StaffLayout() {
     bookings,
     setBookings,
     handleStatusChange,
+    loadedDates,
+    setLoadedDates,
   } satisfies StaffOutletContext;
 
   return (

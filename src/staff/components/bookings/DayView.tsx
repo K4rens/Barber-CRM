@@ -5,12 +5,11 @@ import {
   DAYS_FULL,
   MONTHS,
   MONTHS_NOM,
-  getWeekStart,
 } from "../../types/bookings";
 import type { ScheduleState } from "../../layout/StaffLayout";
 
-const DAY_START = 8;
-const DAY_END = 21;
+const DEFAULT_DAY_START = 8;
+const DEFAULT_DAY_END = 21;
 
 interface Props {
   dayOffset: number;
@@ -24,7 +23,6 @@ function padTime(h: number, m: number) {
   return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
 }
 
-/** Локальная дата без сдвига UTC */
 function toLocalIso(d: Date): string {
   return (
     d.getFullYear() +
@@ -55,9 +53,7 @@ export default function DayView({
   }, [today, dayOffset]);
 
   const targetDateIso = toLocalIso(targetDate);
-  const isSunday = targetDate.getDay() === 0;
 
-  // Определяем weekOffset и dayIndex для targetDate
   const todayForSchedule = new Date();
   todayForSchedule.setHours(0, 0, 0, 0);
   const targetDay = targetDate.getDay();
@@ -77,14 +73,28 @@ export default function DayView({
   const label = `${targetDate.getDate()} ${MONTHS[targetDate.getMonth()]}, ${DAYS_FULL[targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1]}`;
   const monthLabel = `${MONTHS_NOM[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
 
+  const dayStart = useMemo(() => {
+    if (dayShift?.start) return parseInt(dayShift.start.split(":")[0]);
+    return DEFAULT_DAY_START;
+  }, [dayShift]);
+
+  const dayEnd = useMemo(() => {
+    if (dayShift?.end) {
+      const [h, m] = dayShift.end.split(":").map(Number);
+      if (h === 0 && m === 0) return 24;
+      return h;
+    }
+    return DEFAULT_DAY_END;
+  }, [dayShift]);
+
   const slots = useMemo(() => {
     const s: string[] = [];
-    for (let h = DAY_START; h < DAY_END; h++) {
+    for (let h = dayStart; h < dayEnd; h++) {
       for (let m = 0; m < 60; m += 15) s.push(padTime(h, m));
     }
-    s.push(padTime(DAY_END, 0));
+    s.push(padTime(dayEnd === 24 ? 0 : dayEnd, 0));
     return s;
-  }, []);
+  }, [dayStart, dayEnd]);
 
   const dayBookings = useMemo(
     () =>
@@ -116,7 +126,7 @@ export default function DayView({
     let free = 0;
     for (let i = 0; i < 12; i++) {
       const total = h * 60 + m + i * 15;
-      if (total >= DAY_END * 60) break;
+      if (total >= dayEnd * 60) break;
       const key = padTime(Math.floor(total / 60), total % 60);
       if (occupied[key]) break;
       free++;
@@ -185,7 +195,7 @@ export default function DayView({
                       const [bh, bm] = booking.start.split(":").map(Number);
                       const slotsCount = Math.min(
                         dur / 15,
-                        (DAY_END * 60 - bh * 60 - bm) / 15,
+                        (dayEnd * 60 - bh * 60 - bm) / 15,
                       );
                       return (
                         <div

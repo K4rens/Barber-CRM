@@ -121,8 +121,16 @@ function headerMonth(
 }
 
 export default function BookingsPage() {
-  const { bookings, setBookings, handleStatusChange, schedule, setClients } =
-    useStaffContext();
+  const {
+    bookings,
+    setBookings,
+    handleStatusChange,
+    schedule,
+    setClients,
+    loadedDates,
+    setLoadedDates,
+  } = useStaffContext();
+
   const [view, setView] = useState<View>("week");
   const [weekOffset, setWeekOffset] = useState(0);
   const [dayOffset, setDayOffset] = useState(0);
@@ -138,7 +146,6 @@ export default function BookingsPage() {
     number | undefined
   >(undefined);
   const [showNewBooking, setShowNewBooking] = useState(false);
-  const [loadedDates, setLoadedDates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (view !== "day") return;
@@ -192,10 +199,7 @@ export default function BookingsPage() {
       setBookings((prev) => {
         let updated = [...prev];
         for (const { iso, bookings: loaded } of results) {
-          updated = [
-            ...updated.filter((b) => b.date !== iso),
-            ...loaded,
-          ];
+          updated = [...updated.filter((b) => b.date !== iso), ...loaded];
         }
         return updated;
       });
