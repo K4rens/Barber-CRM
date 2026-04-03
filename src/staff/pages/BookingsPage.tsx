@@ -375,7 +375,9 @@ export default function BookingsPage() {
             try {
               const [y, mo, day] = (booking.date ?? "").split("-").map(Number);
               const [h, m] = booking.start.split(":").map(Number);
-              const timeStart = new Date(y, mo - 1, day, h, m).toISOString();
+              const timeStart = new Date(
+                Date.UTC(y, mo - 1, day, h, m),
+              ).toISOString();
               const { data } = await http.post("/staff/bookings", {
                 service_id: booking.serviceId,
                 client_name: booking.name,
