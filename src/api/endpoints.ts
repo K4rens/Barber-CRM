@@ -9,6 +9,8 @@ import type {
   UpsertScheduleDayDto,
   BarberStats,
   AnalyticsParams,
+  Client as ApiClient,
+  UpdateClientDto,
 } from "./types";
 
 export const publicApi = {
@@ -95,10 +97,43 @@ export const staffApi = {
     return data;
   },
 
-  getAnalytics: async (params: AnalyticsParams): Promise<BarberStats> => {
-    const { data } = await http.get<BarberStats>("/staff/analytics", {
-      params,
+  getAnalytics: async (
+  params: AnalyticsParams
+): Promise<BarberStats> => {
+  const { data } = await http.get<BarberStats>("/staff/analytics", {
+    params,
+  })
+  return data
+},
+
+  getClients: async (search?: string): Promise<ApiClient[]> => {
+    const { data } = await http.get<{ clients: ApiClient[] }>(
+      "/staff/clients",
+      { params: search ? { search } : undefined },
+    );
+    return data.clients;
+  },
+
+  getClientBookings: async (
+    phone: string,
+    limit = 50,
+    offset = 0,
+  ): Promise<{ bookings: Booking[]; total: number }> => {
+    const { data } = await http.get<{
+      bookings: Booking[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>("/staff/clients/bookings", {
+      params: { phone, limit, offset },
     });
-    return data;
+    return { bookings: data.bookings, total: data.total };
+  },
+
+  updateClient: async (
+    clientId: string,
+    dto: UpdateClientDto,
+  ): Promise<void> => {
+    await http.put(`/staff/clients/${clientId}`, dto);
   },
 };

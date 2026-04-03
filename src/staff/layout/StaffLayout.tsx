@@ -7,13 +7,13 @@ import {
 import type { Shift, Template } from "../types/schedule";
 import type { Booking, BookingStatus } from "../types/bookings";
 import { tokenStorage } from "../../api/client";
-import { authApi } from "../../api/endpoints";
+import { authApi, staffApi } from "../../api/endpoints";
 import React, { useState } from "react";
 import "./StaffLayout.css";
 
 export interface Client {
   id: number;
-  apiId?: string;
+  apiId?: string; // client_id из бэка, нужен для сохранения заметок
   name: string;
   phone: string;
   notes: string;
@@ -165,10 +165,16 @@ export default function StaffLayout() {
       prev.map((b) => (b.id === id ? { ...b, status } : b)),
     );
 
-  const updateNotes = (phone: string, notes: string) =>
-    setClients((prev) =>
-      prev.map((c) => (c.phone === phone ? { ...c, notes } : c)),
-    );
+  const updateNotes = (phone: string, notes: string) => {
+    setClients((prev) => {
+      // Если у клиента есть apiId — сохраняем заметку на бэке
+      const client = prev.find((c) => c.phone === phone);
+      if (client?.apiId) {
+        staffApi.updateClient(client.apiId, { notes }).catch(() => {});
+      }
+      return prev.map((c) => (c.phone === phone ? { ...c, notes } : c));
+    });
+  };
 
   const handleLogout = async () => {
     try {
