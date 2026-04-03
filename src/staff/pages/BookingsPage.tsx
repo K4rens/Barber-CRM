@@ -16,7 +16,11 @@ type View = "week" | "day" | "month";
 
 function stripPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
-  return "+" + digits;
+  let normalized = digits;
+  if (digits.length === 11 && digits[0] === "8") {
+    normalized = "7" + digits.slice(1);
+  }
+  return "+" + normalized;
 }
 
 function toLocalIso(d: Date): string {
@@ -28,45 +32,81 @@ function toLocalIso(d: Date): string {
     String(d.getDate()).padStart(2, "0")
   );
 }
-
 function slotsToBookings(slots: Slot[], iso: string): Booking[] {
-  let idCounter = Date.now();
-  return slots
-    .filter((s) => s.status === "booked" && s.booking)
-    .map((s) => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const targetDate = new Date(iso);
-      const dayOffset = Math.round(
-        (targetDate.getTime() - today.getTime()) / 86400000,
-      );
-      const timeStart = new Date(s.time_start);
-      const timeEnd = new Date(s.time_end);
-      const start =
-        String(timeStart.getUTCHours()).padStart(2, "0") +
-        ":" +
-        String(timeStart.getUTCMinutes()).padStart(2, "0");
-      const end =
-        String(timeEnd.getUTCHours()).padStart(2, "0") +
-        ":" +
-        String(timeEnd.getUTCMinutes()).padStart(2, "0");
-      const durationMs = timeEnd.getTime() - timeStart.getTime();
-      const duration = Math.round(durationMs / 60000);
+  const bookingsMap = new Map<
+    string,
+    {
+      bookingId: string;
+      clientName: string;
+      clientPhone: string;
+      serviceName: string;
+      start: Date;
+      end: Date;
+    }
+  >();
 
-      return {
-        id: idCounter++,
-        apiId: s.booking!.booking_id,
-        dayOffset,
-        name: s.booking!.client_name,
-        phone: s.booking!.client_phone,
-        service: s.booking!.service_name,
-        start,
-        end,
-        duration,
-        status: "pending" as BookingStatus,
-        date: iso,
-      };
+  for (const slot of slots) {
+    if (slot.status === "booked" && slot.booking) {
+      const bookingId = slot.booking.booking_id;
+      const existing = bookingsMap.get(bookingId);
+      const start = new Date(slot.time_start);
+      const end = new Date(slot.time_end);
+      if (!existing) {
+        bookingsMap.set(bookingId, {
+          bookingId,
+          clientName: slot.booking.client_name,
+          clientPhone: slot.booking.client_phone,
+          serviceName: slot.booking.service_name,
+          start,
+          end,
+        });
+      } else {
+        if (start < existing.start) existing.start = start;
+        if (end > existing.end) existing.end = end;
+      }
+    }
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const targetDate = new Date(iso);
+  const dayOffset = Math.round(
+    (targetDate.getTime() - today.getTime()) / 86400000,
+  );
+
+  const result: Booking[] = [];
+  let idCounter = Date.now();
+
+  for (const [, data] of bookingsMap) {
+    const startTime = data.start;
+    const endTime = data.end;
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const duration = Math.round(durationMs / 60000);
+    const start =
+      String(startTime.getUTCHours()).padStart(2, "0") +
+      ":" +
+      String(startTime.getUTCMinutes()).padStart(2, "0");
+    const end =
+      String(endTime.getUTCHours()).padStart(2, "0") +
+      ":" +
+      String(endTime.getUTCMinutes()).padStart(2, "0");
+
+    result.push({
+      id: idCounter++,
+      apiId: data.bookingId,
+      dayOffset,
+      name: data.clientName,
+      phone: data.clientPhone,
+      service: data.serviceName,
+      start,
+      end,
+      duration,
+      status: "pending" as BookingStatus,
+      date: iso,
     });
+  }
+
+  return result;
 }
 
 function navLabel(
@@ -392,11 +432,28 @@ export default function BookingsPage() {
                   return next;
                 });
               }
-              setBookings((prev) => [
-                ...prev,
-                { ...booking, id: Date.now(), apiId: data.booking_id, phone },
-              ]);
-            } catch {
+              staffApi
+                .getSlots(iso)
+                .then(({ slots }) => {
+                  const loaded = slotsToBookings(slots, iso);
+                  setBookings((prev) => [
+                    ...prev.filter((b) => b.date !== iso),
+                    ...loaded,
+                  ]);
+                })
+                .catch(() => {
+                  setBookings((prev) => [
+                    ...prev,
+                    {
+                      ...booking,
+                      id: Date.now(),
+                      apiId: data.booking_id,
+                      phone,
+                    },
+                  ]);
+                });
+            } catch (err) {
+              console.error("Failed to create booking", err);
               setBookings((prev) => [
                 ...prev,
                 { ...booking, id: Date.now(), phone },
