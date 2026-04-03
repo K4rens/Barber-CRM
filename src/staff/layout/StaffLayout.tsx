@@ -143,13 +143,50 @@ const NAV_ITEMS = [
   },
 ];
 
-function apiClientToLocal(client: any): Client {
+const NOTES_STORAGE_KEY = "barber_clients_notes";
+
+function saveNotesToLocalStorage(clients: Client[]) {
+  const notesMap: Record<string, string> = {};
+  clients.forEach((client) => {
+    if (client.phone && client.notes) {
+      notesMap[client.phone] = client.notes;
+    }
+  });
+  localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notesMap));
+}
+
+function loadNotesFromLocalStorage(): Record<string, string> {
+  const stored = localStorage.getItem(NOTES_STORAGE_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
+function apiClientToLocal(
+  client: any,
+  savedNotes: Record<string, string>,
+): Client {
   return {
-    id: Date.now() + Math.random(), // временный id
+    id: Date.now() + Math.random(),
     apiId: client.client_id,
     name: client.name,
     phone: client.phone,
-    notes: client.notes || "",
+    notes: savedNotes[client.phone] || client.notes || "",
+  };
+}
+
+function apiServiceToLocal(service: any): Service {
+  return {
+    id: service.service_id,
+    name: service.name,
+    duration: service.duration_minutes,
+    price: service.price,
+    active: service.is_active,
   };
 }
 
@@ -170,16 +207,35 @@ export default function StaffLayout() {
     .map((n: string) => n[0])
     .join("");
 
-  // Загружаем клиентов из API при старте
   useEffect(() => {
-    staffApi
-      .getClients()
-      .then((apiClients) => {
-        const localClients = apiClients.map(apiClientToLocal);
+    const savedNotes = loadNotesFromLocalStorage();
+    Promise.all([
+      staffApi.getClients(),
+      staffApi.getServices ? staffApi.getServices() : fetchServices(),
+    ])
+      .then(([apiClients, apiServices]) => {
+        const localClients = apiClients.map((c) =>
+          apiClientToLocal(c, savedNotes),
+        );
         setClients(localClients);
+        saveNotesToLocalStorage(localClients);
+        const localServices = apiServices.map(apiServiceToLocal);
+        setServices(localServices);
       })
-      .catch((err) => console.error("Failed to load clients:", err));
+      .catch((err) => console.error("Failed to load initial data:", err));
   }, []);
+
+  async function fetchServices() {
+    const { http } = await import("../../api/client");
+    const { data } = await http.get("/staff/services", {
+      params: { include_inactive: true },
+    });
+    return data.services;
+  }
+
+  useEffect(() => {
+    saveNotesToLocalStorage(clients);
+  }, [clients]);
 
   const handleStatusChange = (id: number, status: BookingStatus) =>
     setBookings((prev) =>
@@ -190,9 +246,17 @@ export default function StaffLayout() {
     setClients((prev) => {
       const client = prev.find((c) => c.phone === phone);
       if (client?.apiId) {
-        staffApi.updateClient(client.apiId, { notes }).catch(() => {});
+        staffApi
+          .updateClient(client.apiId, { name: client.name, notes })
+          .catch((err) => {
+            console.error("Failed to update notes on server:", err);
+          });
       }
-      return prev.map((c) => (c.phone === phone ? { ...c, notes } : c));
+      const updated = prev.map((c) =>
+        c.phone === phone ? { ...c, notes } : c,
+      );
+      saveNotesToLocalStorage(updated);
+      return updated;
     });
   };
 

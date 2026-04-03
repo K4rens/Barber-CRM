@@ -85,34 +85,33 @@ export default function SchedulePage() {
   const weekSchedule = getWeekSchedule(schedule, weekOffset);
 
   const loadWeek = useCallback(
-    async (_offset: number) => {
-      if (schedule[_offset] !== undefined) return;
+    async (offset: number) => {
+      setLoadingWeeks((prev) => new Set(prev).add(offset));
 
-      setLoadingWeeks((prev) => new Set(prev).add(_offset));
-
-      const ws = getWeekStart(_offset);
+      const ws = getWeekStart(offset);
       const isoWeek = toIsoWeek(ws);
 
       try {
         const result = await staffApi.getSchedule(isoWeek);
         const shifts = apiDaysToShifts(result.days, ws);
-        setSchedule((prev) => ({ ...prev, [_offset]: shifts }));
-      } catch {
-        setSchedule((prev) => ({ ...prev, [_offset]: prev[_offset] ?? {} }));
+        setSchedule((prev) => ({ ...prev, [offset]: shifts }));
+      } catch (err) {
+        console.error("Failed to load schedule", err);
+        setSchedule((prev) => ({ ...prev, [offset]: prev[offset] ?? {} }));
       } finally {
         setLoadingWeeks((prev) => {
           const next = new Set(prev);
-          next.delete(_offset);
+          next.delete(offset);
           return next;
         });
       }
     },
-    [schedule, setSchedule],
+    [setSchedule],
   );
 
   useEffect(() => {
     loadWeek(weekOffset);
-  }, [weekOffset]);
+  }, [weekOffset, loadWeek]);
 
   const dayIso = (i: number) => dayIsoFromWeekStart(weekStart, i);
 
@@ -143,19 +142,13 @@ export default function SchedulePage() {
     } else {
       await staffApi.deleteScheduleDay(date);
     }
-    setSchedule((prev) => ({
-      ...prev,
-      [weekOffset]: { ...(prev[weekOffset] ?? {}), [dayIndex]: shift },
-    }));
+    await loadWeek(weekOffset);
   };
 
   const applyTemplate = async (t: Template) => {
-    const currentWeek = schedule[weekOffset] ?? {};
-    const week: Record<number, Shift | null> = { ...currentWeek };
     const promises: Promise<unknown>[] = [];
     t.days.forEach((shift, i) => {
       if (pendingBookingsForDay(i).length === 0 && !isPast(i)) {
-        week[i] = shift;
         const date = dayIso(i);
         if (shift) {
           promises.push(
@@ -171,7 +164,7 @@ export default function SchedulePage() {
       }
     });
     await Promise.all(promises);
-    setSchedule((prev) => ({ ...prev, [weekOffset]: week }));
+    await loadWeek(weekOffset);
   };
 
   const saveTemplate = (days: (Shift | null)[]) => {
