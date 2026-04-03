@@ -1,16 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useStaffContext } from "../layout/StaffLayout";
 import type { Client } from "../layout/StaffLayout";
+import { http } from "../../api/client";
 import "../../staff-styles/clients.css";
-
-interface Visit {
-  clientId: number;
-  date: string;
-  service: string;
-  status: "completed" | "cancelled" | "no_show" | "pending";
-}
-
-const MOCK_VISITS: Visit[] = [];
 
 const STATUS_LABELS: Record<string, string> = {
   completed: "Выполнено",
@@ -22,8 +14,14 @@ const STATUS_LABELS: Record<string, string> = {
 const PAGE_SIZE = 5;
 
 function formatDate(iso: string) {
-  const [y, m, d] = iso.split("-");
-  return `${d}.${m}.${y}`;
+  const d = new Date(iso);
+  return (
+    String(d.getDate()).padStart(2, "0") +
+    "." +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "." +
+    d.getFullYear()
+  );
 }
 
 function HistoryModal({
@@ -34,29 +32,31 @@ function HistoryModal({
   onClose: () => void;
 }) {
   const [page, setPage] = useState(0);
-  const _t = new Date();
-  const today =
-    _t.getFullYear() +
-    "-" +
-    String(_t.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(_t.getDate()).padStart(2, "0");
+  const [visits, setVisits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const visits = useMemo(
-    () =>
-      MOCK_VISITS.filter(
-        (v) =>
-          v.clientId === client.id && v.status !== "pending" && v.date <= today,
-      ).sort((a, b) => b.date.localeCompare(a.date)),
-    [client.id],
+  useEffect(() => {
+    const phone = client.phone.replace(/\D/g, "");
+    const formatted = "+" + phone;
+    http
+      .get("/staff/clients/bookings", {
+        params: { phone: formatted, limit: 50, offset: 0 },
+      })
+      .then(({ data }) => setVisits(data.bookings ?? []))
+      .catch(() => setVisits([]))
+      .finally(() => setLoading(false));
+  }, [client.phone]);
+
+  const sorted = [...visits].sort((a, b) =>
+    (b.time_start ?? "").localeCompare(a.time_start ?? ""),
   );
 
-  const totalPages = Math.max(1, Math.ceil(visits.length / PAGE_SIZE));
-  const slice = visits.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const rows: (Visit | null)[] = [...slice];
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const slice = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const rows: (any | null)[] = [...slice];
   while (rows.length < PAGE_SIZE) rows.push(null);
 
-  const count = visits.length;
+  const count = sorted.length;
   const countLabel = count === 1 ? "визит" : count < 5 ? "визита" : "визитов";
 
   return (
@@ -70,22 +70,24 @@ function HistoryModal({
           </button>
         </div>
         <div className="history-count">
-          {count} {countLabel}
+          {loading ? "Загрузка..." : `${count} ${countLabel}`}
         </div>
         <div style={{ minHeight: 280 }}>
-          {count === 0 ? (
+          {loading ? null : count === 0 ? (
             <div className="history-empty">Нет посещений</div>
           ) : (
             rows.map((v, i) =>
               v ? (
                 <div key={i} className="history-item">
                   <span className="history-item__date">
-                    {formatDate(v.date)}
+                    {formatDate(v.time_start)}
                   </span>
                   <span className="history-item__status">
                     {STATUS_LABELS[v.status] ?? ""}
                   </span>
-                  <span className="history-item__service">{v.service}</span>
+                  <span className="history-item__service">
+                    {v.service_name}
+                  </span>
                 </div>
               ) : (
                 <div key={i} className="history-item history-item--empty">
@@ -119,8 +121,6 @@ function HistoryModal({
   );
 }
 
-// ── Модалка описания ──────────────────────────────────────────
-
 function NotesModal({
   client,
   onSave,
@@ -131,6 +131,23 @@ function NotesModal({
   onClose: () => void;
 }) {
   const [notes, setNotes] = useState(client.notes);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (client.apiId) {
+        await http.put(`/staff/clients/${client.apiId}`, { notes });
+      }
+      onSave(notes);
+      onClose();
+    } catch {
+      onSave(notes);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
@@ -162,12 +179,10 @@ function NotesModal({
           </div>
           <button
             className="staff-btn staff-btn--primary"
-            onClick={() => {
-              onSave(notes);
-              onClose();
-            }}
+            onClick={handleSave}
+            disabled={saving}
           >
-            Сохранить
+            {saving ? "Сохранение..." : "Сохранить"}
           </button>
         </div>
       </div>
@@ -175,13 +190,29 @@ function NotesModal({
   );
 }
 
-// ── Страница ──────────────────────────────────────────────────
-
 export default function ClientsPage() {
-  const { clients, updateNotes } = useStaffContext();
+  const { clients, setClients, updateNotes } = useStaffContext();
   const [query, setQuery] = useState("");
   const [history, setHistory] = useState<Client | null>(null);
   const [notesClient, setNotesClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    http
+      .get("/staff/clients")
+      .then(({ data }) => {
+        const loaded = (data.clients ?? []).map((c: any, i: number) => ({
+          id: i + 1,
+          apiId: c.client_id,
+          name: c.name,
+          phone: c.phone,
+          notes: c.notes ?? "",
+        }));
+        setClients(loaded);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -218,7 +249,8 @@ export default function ClientsPage() {
           <span />
         </div>
 
-        {filtered.length === 0 && (
+        {loading && <div className="clients-empty">Загрузка...</div>}
+        {!loading && filtered.length === 0 && (
           <div className="clients-empty">Ничего не найдено</div>
         )}
 

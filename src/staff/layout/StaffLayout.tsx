@@ -8,12 +8,12 @@ import type { Shift, Template } from "../types/schedule";
 import type { Booking, BookingStatus } from "../types/bookings";
 import { tokenStorage } from "../../api/client";
 import { authApi, staffApi } from "../../api/endpoints";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./StaffLayout.css";
 
 export interface Client {
   id: number;
-  apiId?: string; // client_id из бэка, нужен для сохранения заметок
+  apiId?: string;
   name: string;
   phone: string;
   notes: string;
@@ -143,6 +143,16 @@ const NAV_ITEMS = [
   },
 ];
 
+function apiClientToLocal(client: any): Client {
+  return {
+    id: Date.now() + Math.random(), // временный id
+    apiId: client.client_id,
+    name: client.name,
+    phone: client.phone,
+    notes: client.notes || "",
+  };
+}
+
 export default function StaffLayout() {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -160,6 +170,17 @@ export default function StaffLayout() {
     .map((n: string) => n[0])
     .join("");
 
+  // Загружаем клиентов из API при старте
+  useEffect(() => {
+    staffApi
+      .getClients()
+      .then((apiClients) => {
+        const localClients = apiClients.map(apiClientToLocal);
+        setClients(localClients);
+      })
+      .catch((err) => console.error("Failed to load clients:", err));
+  }, []);
+
   const handleStatusChange = (id: number, status: BookingStatus) =>
     setBookings((prev) =>
       prev.map((b) => (b.id === id ? { ...b, status } : b)),
@@ -167,7 +188,6 @@ export default function StaffLayout() {
 
   const updateNotes = (phone: string, notes: string) => {
     setClients((prev) => {
-      // Если у клиента есть apiId — сохраняем заметку на бэке
       const client = prev.find((c) => c.phone === phone);
       if (client?.apiId) {
         staffApi.updateClient(client.apiId, { notes }).catch(() => {});
@@ -336,7 +356,6 @@ export default function StaffLayout() {
             <div className="staff-modal__header">
               <span className="staff-modal__title">Выйти из аккаунта?</span>
               <button
-                type="button"
                 className="staff-modal__close"
                 onClick={() => setShowLogoutConfirm(false)}
               >
@@ -345,14 +364,12 @@ export default function StaffLayout() {
             </div>
             <div className="staff-modal__actions">
               <button
-                type="button"
                 className="staff-btn staff-btn--danger"
                 onClick={handleLogout}
               >
                 Да, выйти
               </button>
               <button
-                type="button"
                 className="staff-btn staff-btn--secondary"
                 onClick={() => setShowLogoutConfirm(false)}
               >
