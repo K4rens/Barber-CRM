@@ -13,15 +13,16 @@ for (let h = 8; h < 21; h++) {
 
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
-  const local =
-    digits.startsWith("7") || digits.startsWith("8") ? digits.slice(1) : digits;
-  let result = "+7";
-  if (!local.length) return result;
-  result += " " + local.slice(0, 3);
-  if (local.length >= 4) result += " " + local.slice(3, 6);
-  if (local.length >= 7) result += "-" + local.slice(6, 8);
-  if (local.length >= 9) result += "-" + local.slice(8, 10);
-  return result;
+  let normalized = digits;
+  if (digits.length === 11 && digits[0] === "8") {
+    normalized = "7" + digits.slice(1);
+  }
+  return "+" + normalized;
+}
+
+function isValidPhone(phone: string): boolean {
+  const cleaned = phone.replace(/\D/g, "");
+  return cleaned.length >= 10 && cleaned.length <= 15;
 }
 
 function formatDuration(min: number): string {
@@ -83,8 +84,10 @@ export default function NewBookingModal({
       setError("Введите имя клиента");
       return;
     }
-    if (!phone || phone.length < 5) {
-      setError("Введите телефон");
+    if (!phone || !isValidPhone(phone)) {
+      setError(
+        "Введите корректный номер телефона",
+      );
       return;
     }
     if (!date) {
@@ -100,22 +103,28 @@ export default function NewBookingModal({
       return;
     }
 
-    const dur = duration ?? 45;
+    const [y, mo, day] = date.split("-").map(Number);
     const [th, tm] = time.split(":").map(Number);
+    const slotDateTime = new Date(y, mo - 1, day, th, tm);
+    if (slotDateTime < new Date()) {
+      setError("Нельзя записать на прошедшее время");
+      return;
+    }
+
+    const dur = duration ?? 45;
     const endTotal = th * 60 + tm + dur;
     const endStr =
       String(Math.floor(endTotal / 60)).padStart(2, "0") +
       ":" +
       String(endTotal % 60).padStart(2, "0");
 
-    const [y, mo, day] = date.split("-").map(Number);
     const d = new Date(y, mo - 1, day);
     const dayOffset = d.getDay() === 0 ? 6 : d.getDay() - 1;
 
     onSave({
       dayOffset,
       name: name.trim(),
-      phone,
+      phone: formatPhone(phone),
       service,
       serviceId: selectedService?.id,
       start: time,

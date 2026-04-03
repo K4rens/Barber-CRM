@@ -140,6 +140,14 @@ export default function DayView({
     if (total < 0) return null;
     return padTime(Math.floor(total / 60), total % 60);
   };
+  
+  const isSlotPast = (timeKey: string): boolean => {
+    const now = new Date();
+    const [hours, minutes] = timeKey.split(":").map(Number);
+    const slotDateTime = new Date(targetDate);
+    slotDateTime.setHours(hours, minutes, 0, 0);
+    return slotDateTime < now;
+  };
 
   return (
     <div>
@@ -177,6 +185,7 @@ export default function DayView({
             const booking = occupied[key];
             const prevBooking = occupied[getPrevKey(key) ?? ""];
             const isFirst = booking && prevBooking?.id !== booking.id;
+            const slotPast = isSlotPast(key);
 
             return (
               <div
@@ -224,6 +233,11 @@ export default function DayView({
                   {!isLast && !booking && (
                     <button
                       className="day-slot__add"
+                      disabled={slotPast}
+                      style={{
+                        opacity: slotPast ? 0.4 : 1,
+                        cursor: slotPast ? "not-allowed" : "pointer",
+                      }}
                       onClick={() =>
                         onAddSlot(key, getFreeSlots(key), targetDateIso)
                       }
