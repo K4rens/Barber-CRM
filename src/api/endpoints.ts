@@ -7,6 +7,8 @@ import type {
   Slot,
   ScheduleDay,
   UpsertScheduleDayDto,
+  BarberStats,
+  AnalyticsParams,
 } from "./types";
 
 export const publicApi = {
@@ -90,6 +92,13 @@ export const staffApi = {
       "/staff/slots",
       { params: { date } },
     );
+    return data;
+  },
+
+  getAnalytics: async (params: AnalyticsParams): Promise<BarberStats> => {
+    const { data } = await http.get<BarberStats>("/staff/analytics", {
+      params,
+    });
     return data;
   },
 };

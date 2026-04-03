@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { http } from "../../api/client";
+import { staffApi } from "../../api/endpoints";
+import type { BarberStats, AnalyticsPeriod } from "../../api/types";
 import "../../staff-styles/analytics.css";
 
-type Period = "day" | "month" | "all";
-
-const PERIOD_LABELS: Record<Period, string> = {
+const PERIOD_LABELS: Record<AnalyticsPeriod, string> = {
   day: "День",
+  week: "Неделя",
   month: "Месяц",
   all: "Всё время",
 };
+
+const PERIODS: AnalyticsPeriod[] = ["day", "week", "month", "all"];
 
 function formatMoney(n: number): string {
   return n.toLocaleString("ru-RU") + " ₽";
@@ -18,43 +20,26 @@ function formatNum(n: number): string {
   return n.toLocaleString("ru-RU");
 }
 
-interface Stats {
-  clients_served: number;
-  total_revenue: number;
-  hours_worked: number;
-  average_check: number;
-  bookings_total: number;
-  bookings_completed: number;
-  bookings_cancelled: number;
-  bookings_no_show: number;
-  bookings_pending: number;
-  occupancy_rate: number;
-  top_services: {
-    service_id: string;
-    service_name: string;
-    count: number;
-    revenue: number;
-  }[];
-}
-
 export default function AnalyticsPage() {
-  const [period, setPeriod] = useState<Period>("month");
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [period, setPeriod] = useState<AnalyticsPeriod>("month");
+  const [stats, setStats] = useState<BarberStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
     const timer = setTimeout(() => setShowLoading(true), 150);
-    http
-      .get("/staff/analytics", { params: { period } })
-      .then(({ data }) => setStats(data))
+
+    staffApi
+      .getAnalytics({ period })
+      .then((data) => setStats(data))
       .catch(() => {})
       .finally(() => {
         setLoading(false);
         setShowLoading(false);
         clearTimeout(timer);
       });
+
     return () => clearTimeout(timer);
   }, [period]);
 
@@ -83,7 +68,7 @@ export default function AnalyticsPage() {
           <h1 className="staff-page-header__title">Аналитика</h1>
         </div>
         <div className="period-tabs">
-          {(["day", "month", "all"] as Period[]).map((p) => (
+          {PERIODS.map((p) => (
             <button
               key={p}
               className={`period-tab${period === p ? " period-tab--active" : ""}`}
