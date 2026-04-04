@@ -144,6 +144,7 @@ const NAV_ITEMS = [
 ];
 
 const NOTES_STORAGE_KEY = "barber_clients_notes";
+const TEMPLATES_STORAGE_KEY = "barber_templates";
 
 function saveNotesToLocalStorage(clients: Client[]) {
   const notesMap: Record<string, string> = {};
@@ -165,6 +166,22 @@ function loadNotesFromLocalStorage(): Record<string, string> {
     }
   }
   return {};
+}
+
+function saveTemplatesToLocalStorage(templates: Template[]) {
+  localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
+}
+
+function loadTemplatesFromLocalStorage(): Template[] {
+  const stored = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return [];
+    }
+  }
+  return [];
 }
 
 function apiClientToLocal(
@@ -197,7 +214,9 @@ export default function StaffLayout() {
   const [clients, setClients] = useState<Client[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [schedule, setSchedule] = useState<ScheduleState>({});
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templates, setTemplates] = useState<Template[]>(() =>
+    loadTemplatesFromLocalStorage(),
+  );
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loadedDates, setLoadedDates] = useState<Set<string>>(new Set());
 
@@ -236,6 +255,10 @@ export default function StaffLayout() {
   useEffect(() => {
     saveNotesToLocalStorage(clients);
   }, [clients]);
+
+  useEffect(() => {
+    saveTemplatesToLocalStorage(templates);
+  }, [templates]);
 
   const handleStatusChange = (id: number, status: BookingStatus) =>
     setBookings((prev) =>

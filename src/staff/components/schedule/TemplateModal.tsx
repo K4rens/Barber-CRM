@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Shift, Template } from "../../types/schedule";
 import { DAYS_FULL } from "../../types/schedule";
 
 interface Props {
-  template: Template | null; 
+  template: Template | null;
   onSave: (days: (Shift | null)[]) => void;
   onClose: () => void;
 }
@@ -57,7 +57,7 @@ export default function TemplateModal({ template, onSave, onClose }: Props) {
   return (
     <>
       <div className="staff-overlay" onClick={onClose} />
-      <div className="staff-modal" style={{ width: 500 }}>
+      <div className="staff-modal template-modal">
         <div className="staff-modal__header">
           <span className="staff-modal__title">
             {template ? "Редактировать шаблон" : "Новый шаблон"}
@@ -77,7 +77,6 @@ export default function TemplateModal({ template, onSave, onClose }: Props) {
                   value={day.start}
                   disabled={day.off}
                   onChange={(e) => updateDay(i, { start: e.target.value })}
-                  style={{ width: 110 }}
                 />
                 <span style={{ color: "#aaa" }}>—</span>
                 <input
@@ -86,7 +85,6 @@ export default function TemplateModal({ template, onSave, onClose }: Props) {
                   value={day.end}
                   disabled={day.off}
                   onChange={(e) => updateDay(i, { end: e.target.value })}
-                  style={{ width: 110 }}
                 />
               </div>
               <label className="off-checkbox">
