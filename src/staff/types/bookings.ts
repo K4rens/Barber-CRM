@@ -85,3 +85,4 @@ export function shortName(fullName: string): string {
 }
 
 export const MOCK_BOOKINGS: Booking[] = [];
+

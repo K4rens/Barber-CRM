@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Booking, BookingStatus } from "../types/bookings";
 import { MONTHS, MONTHS_NOM, getWeekStart } from "../types/bookings";
 import { useStaffContext } from "../layout/StaffLayout";
@@ -32,6 +32,52 @@ function toLocalIso(d: Date): string {
     String(d.getDate()).padStart(2, "0")
   );
 }
+
+// --- Хелперы для загрузки расписания (аналог SchedulePage) ---
+function toIsoWeek(weekStart: Date): string {
+  const d = new Date(weekStart);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3);
+  const year = d.getFullYear();
+  const jan4 = new Date(year, 0, 4);
+  const startOfWeek1 = new Date(jan4);
+  startOfWeek1.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+  const weekNum =
+    Math.round((d.getTime() - startOfWeek1.getTime()) / 604800000) + 1;
+  return `${year}-W${String(weekNum).padStart(2, "0")}`;
+}
+
+function dayIsoFromWeekStart(weekStart: Date, i: number): string {
+  const d = new Date(weekStart);
+  d.setDate(weekStart.getDate() + i);
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+}
+
+function apiDaysToShifts(
+  days: Array<{ date: string; start_time: string; end_time: string }>,
+  weekStart: Date,
+): Record<number, { start: string; end: string } | null> {
+  const result: Record<number, { start: string; end: string } | null> = {};
+  for (let i = 0; i < 7; i++) {
+    const iso = dayIsoFromWeekStart(weekStart, i);
+    const found = days.find((d) => d.date === iso);
+    result[i] = found
+      ? {
+          start: found.start_time.slice(0, 5),
+          end: found.end_time.slice(0, 5),
+        }
+      : null;
+  }
+  return result;
+}
+// --- Конец хелперов ---
+
 function slotsToBookings(slots: Slot[], iso: string): Booking[] {
   const bookingsMap = new Map<
     string,
@@ -166,6 +212,7 @@ export default function BookingsPage() {
     setBookings,
     handleStatusChange,
     schedule,
+    setSchedule,
     setClients,
     loadedDates,
     setLoadedDates,
@@ -186,6 +233,57 @@ export default function BookingsPage() {
     number | undefined
   >(undefined);
   const [showNewBooking, setShowNewBooking] = useState(false);
+
+  // --- ФИКС: загружаем расписание если его ещё нет в контексте ---
+  const loadScheduleWeek = useCallback(
+    async (offset: number) => {
+      // Если расписание для этой недели уже загружено — не грузим повторно
+      if (schedule[offset] !== undefined) return;
+
+      const ws = getWeekStart(offset);
+      const isoWeek = toIsoWeek(ws);
+      try {
+        const result = await staffApi.getSchedule(isoWeek);
+        const shifts = apiDaysToShifts(result.days, ws);
+        setSchedule((prev) => ({ ...prev, [offset]: shifts }));
+      } catch (err) {
+        console.error("BookingsPage: Failed to load schedule", err);
+        // Ставим пустой объект чтобы не пытаться грузить повторно
+        setSchedule((prev) => ({ ...prev, [offset]: prev[offset] ?? {} }));
+      }
+    },
+    [schedule, setSchedule],
+  );
+
+  // Загружаем расписание для текущей недели в режиме "неделя"
+  useEffect(() => {
+    if (view !== "week") return;
+    loadScheduleWeek(weekOffset);
+  }, [view, weekOffset, loadScheduleWeek]);
+
+  // Загружаем расписание для нужной недели в режиме "день"
+  useEffect(() => {
+    if (view !== "day") return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(today);
+    d.setDate(today.getDate() + dayOffset);
+
+    const targetDay = d.getDay();
+    const diffToMon = targetDay === 0 ? -6 : 1 - targetDay;
+    const targetMon = new Date(d);
+    targetMon.setDate(d.getDate() + diffToMon);
+    const curDay = today.getDay();
+    const curMon = new Date(today);
+    curMon.setDate(today.getDate() + (curDay === 0 ? -6 : 1 - curDay));
+    const targetWeekOffset = Math.round(
+      (targetMon.getTime() - curMon.getTime()) / (7 * 86400000),
+    );
+
+    loadScheduleWeek(targetWeekOffset);
+  }, [view, dayOffset, loadScheduleWeek]);
+  // --- Конец фикса ---
 
   useEffect(() => {
     if (view !== "day") return;
