@@ -5,7 +5,6 @@ import { staffApi } from "../../api/endpoints";
 import type { Booking as ApiBooking } from "../../api/types";
 import "../../staff-styles/clients.css";
 
-// Компонент истории посещений – реальный API
 function HistoryModal({
   client,
   onClose,
@@ -146,7 +145,6 @@ function HistoryModal({
   );
 }
 
-// Компонент редактирования описания (без изменений)
 function NotesModal({
   client,
   onSave,
@@ -201,7 +199,6 @@ function NotesModal({
   );
 }
 
-// Компонент подтверждения удаления (без изменений)
 function ConfirmDeleteModal({
   client,
   onConfirm,
@@ -245,7 +242,6 @@ function ConfirmDeleteModal({
   );
 }
 
-// Основная страница
 export default function ClientsPage() {
   const { clients, setClients, updateNotes } = useStaffContext();
   const [query, setQuery] = useState("");

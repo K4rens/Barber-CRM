@@ -151,4 +151,13 @@ export const staffApi = {
     });
     return data;
   },
+  getServices: async (includeInactive = true): Promise<Service[]> => {
+    const { data } = await http.get<{ services: Service[] }>(
+      "/staff/services",
+      {
+        params: { include_inactive: includeInactive },
+      },
+    );
+    return data.services;
+  },
 };
