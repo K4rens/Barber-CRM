@@ -136,6 +136,19 @@ export const staffApi = {
   },
   deleteClient: async (clientId: string): Promise<void> => {
     await http.delete(`/staff/clients/${clientId}`);
-  }
-};
+  },
 
+  getBookingSettings: async (): Promise<{ compact_slots_enabled: boolean }> => {
+    const { data } = await http.get("/staff/booking-settings");
+    return data;
+  },
+
+  setCompactSlots: async (
+    enabled: boolean,
+  ): Promise<{ compact_slots_enabled: boolean }> => {
+    const { data } = await http.patch("/staff/booking-settings/compact-slots", {
+      enabled,
+    });
+    return data;
+  },
+};

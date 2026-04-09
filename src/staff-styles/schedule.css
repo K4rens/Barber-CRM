@@ -48,7 +48,6 @@
 .schedule-day--today .schedule-day__add { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.3); }
 .schedule-day--today .schedule-day__add:hover { color: #fff; border-color: rgba(255,255,255,0.8); }
 
-
 .schedule-templates-section {
   margin-top: 32px;
   padding-top: 24px;
@@ -134,7 +133,6 @@
 .btn--danger { background: transparent; border-color: #e53935; color: #e53935; }
 .btn--danger:hover { background: #ffebee; }
 
-
 .template-day-row {
   display: flex;
   align-items: center;
@@ -181,6 +179,47 @@
   font-style: italic;
 }
 
+.compact-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.compact-toggle__label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.compact-toggle__switch {
+  display: flex;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 2px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.compact-toggle__switch:hover {
+  border-color: #000;
+}
+
+.compact-toggle__option {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  color: #888;
+  transition: all 0.15s ease;
+}
+
+.compact-toggle__option--active {
+  background: #000;
+  color: #fff;
+}
 
 @media (max-width: 768px) {
 

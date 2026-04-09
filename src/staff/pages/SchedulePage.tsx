@@ -67,6 +67,7 @@ export default function SchedulePage() {
     Template | null | undefined
   >(undefined);
   const [loadingWeeks, setLoadingWeeks] = useState<Set<number>>(new Set());
+  const [compactMode, setCompactMode] = useState<boolean | null>(null);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -112,6 +113,26 @@ export default function SchedulePage() {
   useEffect(() => {
     loadWeek(weekOffset);
   }, [weekOffset, loadWeek]);
+
+  useEffect(() => {
+    staffApi
+      .getBookingSettings()
+      .then(({ compact_slots_enabled }) =>
+        setCompactMode(compact_slots_enabled),
+      )
+      .catch(() => setCompactMode(false));
+  }, []);
+
+  const handleToggleCompact = async () => {
+    if (compactMode === null) return;
+    const newValue = !compactMode;
+    try {
+      await staffApi.setCompactSlots(newValue);
+      setCompactMode(newValue);
+    } catch (err) {
+      console.error("Failed to toggle compact slots", err);
+    }
+  };
 
   const dayIso = (i: number) => dayIsoFromWeekStart(weekStart, i);
 
@@ -207,6 +228,53 @@ export default function SchedulePage() {
         </div>
       </div>
 
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            className="btn btn--outline"
+            onClick={() => setShowTemplates((v) => !v)}
+          >
+            {showTemplates ? "Скрыть шаблоны" : "Мои шаблоны"}
+          </button>
+          {showTemplates && (
+            <button
+              className="btn btn--primary"
+              onClick={() => setEditingTemplate(null)}
+            >
+              + Создать шаблон
+            </button>
+          )}
+        </div>
+
+        {compactMode !== null && (
+          <div className="compact-toggle">
+            <span className="compact-toggle__label">Показ слотов:</span>
+            <div
+              className="compact-toggle__switch"
+              onClick={handleToggleCompact}
+            >
+              <div
+                className={`compact-toggle__option ${!compactMode ? "compact-toggle__option--active" : ""}`}
+              >
+                Все
+              </div>
+              <div
+                className={`compact-toggle__option ${compactMode ? "compact-toggle__option--active" : ""}`}
+              >
+                Компакт
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {isLoading ? (
         <div
           style={{
@@ -294,29 +362,6 @@ export default function SchedulePage() {
       )}
 
       <div className="schedule-templates-section">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 16,
-          }}
-        >
-          <button
-            className="btn btn--outline"
-            onClick={() => setShowTemplates((v) => !v)}
-          >
-            {showTemplates ? "Скрыть шаблоны" : "Мои шаблоны"}
-          </button>
-          {showTemplates && (
-            <button
-              className="btn btn--primary"
-              onClick={() => setEditingTemplate(null)}
-            >
-              + Создать шаблон
-            </button>
-          )}
-        </div>
         {showTemplates && (
           <div className="templates-list">
             {templates.length === 0 && (
