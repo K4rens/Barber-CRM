@@ -1,28 +1,10 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useStaffContext } from "../layout/StaffLayout";
 import type { Client } from "../layout/StaffLayout";
-import { http } from "../../api/client";
+import { staffApi } from "../../api/endpoints";
 import "../../staff-styles/clients.css";
 
-const STATUS_LABELS: Record<string, string> = {
-  completed: "Выполнено",
-  cancelled: "Отменено",
-  no_show: "Не пришёл",
-  pending: "Ожидает",
-};
-
-const PAGE_SIZE = 5;
-
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return (
-    String(d.getDate()).padStart(2, "0") +
-    "." +
-    String(d.getMonth() + 1).padStart(2, "0") +
-    "." +
-    d.getFullYear()
-  );
-}
+// ─── Компонент истории посещений ──────────────────────────────────────────────
 
 function HistoryModal({
   client,
@@ -32,32 +14,43 @@ function HistoryModal({
   onClose: () => void;
 }) {
   const [page, setPage] = useState(0);
-  const [visits, setVisits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const PAGE_SIZE = 5;
 
-  useEffect(() => {
-    const phone = client.phone.replace(/\D/g, "");
-    const formatted = "+" + phone;
-    http
-      .get("/staff/clients/bookings", {
-        params: { phone: formatted, limit: 50, offset: 0 },
-      })
-      .then(({ data }) => setVisits(data.bookings ?? []))
-      .catch(() => setVisits([]))
-      .finally(() => setLoading(false));
-  }, [client.phone]);
+  // MOCK_VISITS – временные данные (в реальном проекте нужно подставить реальные данные)
+  const MOCK_VISITS: any[] = [];
 
-  const sorted = [...visits].sort((a, b) =>
-    (b.time_start ?? "").localeCompare(a.time_start ?? ""),
-  );
+  const today = new Date();
+  const todayStr =
+    today.getFullYear() +
+    "-" +
+    String(today.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(today.getDate()).padStart(2, "0");
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const slice = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const visits = MOCK_VISITS.filter(
+    (v) =>
+      v.clientId === client.id && v.status !== "pending" && v.date <= todayStr,
+  ).sort((a, b) => b.date.localeCompare(a.date));
+
+  const totalPages = Math.max(1, Math.ceil(visits.length / PAGE_SIZE));
+  const slice = visits.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const rows: (any | null)[] = [...slice];
   while (rows.length < PAGE_SIZE) rows.push(null);
 
-  const count = sorted.length;
+  const count = visits.length;
   const countLabel = count === 1 ? "визит" : count < 5 ? "визита" : "визитов";
+
+  const formatDate = (iso: string) => {
+    const [y, m, d] = iso.split("-");
+    return `${d}.${m}.${y}`;
+  };
+
+  const STATUS_LABELS: Record<string, string> = {
+    completed: "Выполнено",
+    cancelled: "Отменено",
+    no_show: "Не пришёл",
+    pending: "Ожидает",
+  };
 
   return (
     <>
@@ -70,24 +63,22 @@ function HistoryModal({
           </button>
         </div>
         <div className="history-count">
-          {loading ? "Загрузка..." : `${count} ${countLabel}`}
+          {count} {countLabel}
         </div>
         <div style={{ minHeight: 280 }}>
-          {loading ? null : count === 0 ? (
+          {count === 0 ? (
             <div className="history-empty">Нет посещений</div>
           ) : (
             rows.map((v, i) =>
               v ? (
                 <div key={i} className="history-item">
                   <span className="history-item__date">
-                    {formatDate(v.time_start)}
+                    {formatDate(v.date)}
                   </span>
                   <span className="history-item__status">
                     {STATUS_LABELS[v.status] ?? ""}
                   </span>
-                  <span className="history-item__service">
-                    {v.service_name}
-                  </span>
+                  <span className="history-item__service">{v.service}</span>
                 </div>
               ) : (
                 <div key={i} className="history-item history-item--empty">
@@ -121,6 +112,8 @@ function HistoryModal({
   );
 }
 
+// ─── Компонент редактирования описания ────────────────────────────────────────
+
 function NotesModal({
   client,
   onSave,
@@ -131,23 +124,6 @@ function NotesModal({
   onClose: () => void;
 }) {
   const [notes, setNotes] = useState(client.notes);
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      if (client.apiId) {
-        await http.put(`/staff/clients/${client.apiId}`, { notes });
-      }
-      onSave(notes);
-      onClose();
-    } catch {
-      onSave(notes);
-      onClose();
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <>
@@ -179,10 +155,12 @@ function NotesModal({
           </div>
           <button
             className="staff-btn staff-btn--primary"
-            onClick={handleSave}
-            disabled={saving}
+            onClick={() => {
+              onSave(notes);
+              onClose();
+            }}
           >
-            {saving ? "Сохранение..." : "Сохранить"}
+            Сохранить
           </button>
         </div>
       </div>
@@ -190,29 +168,59 @@ function NotesModal({
   );
 }
 
+// ─── Компонент подтверждения удаления ─────────────────────────────────────────
+
+function ConfirmDeleteModal({
+  client,
+  onConfirm,
+  onCancel,
+}: {
+  client: Client;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <>
+      <div className="staff-overlay" onClick={onCancel} />
+      <div className="staff-modal staff-modal--sm">
+        <div className="staff-modal__header">
+          <span className="staff-modal__title">Удалить клиента</span>
+          <button className="staff-modal__close" onClick={onCancel}>
+            ✕
+          </button>
+        </div>
+        <div className="staff-modal__body">
+          <p style={{ marginBottom: 20, fontSize: 13 }}>
+            Вы уверены, что хотите удалить клиента{" "}
+            <strong>{client.name}</strong>?
+            <br />
+            Все его записи останутся, но клиент исчезнет из базы.
+          </p>
+          <div className="staff-modal__actions">
+            <button className="staff-btn staff-btn--danger" onClick={onConfirm}>
+              Да, удалить
+            </button>
+            <button
+              className="staff-btn staff-btn--secondary"
+              onClick={onCancel}
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Основная страница ────────────────────────────────────────────────────────
+
 export default function ClientsPage() {
   const { clients, setClients, updateNotes } = useStaffContext();
   const [query, setQuery] = useState("");
   const [history, setHistory] = useState<Client | null>(null);
   const [notesClient, setNotesClient] = useState<Client | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    http
-      .get("/staff/clients")
-      .then(({ data }) => {
-        const loaded = (data.clients ?? []).map((c: any, i: number) => ({
-          id: i + 1,
-          apiId: c.client_id,
-          name: c.name,
-          phone: c.phone,
-          notes: c.notes ?? "",
-        }));
-        setClients(loaded);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const [deleteConfirm, setDeleteConfirm] = useState<Client | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -222,6 +230,18 @@ export default function ClientsPage() {
         )
       : clients;
   }, [clients, query]);
+
+  const handleDelete = async (client: Client) => {
+    if (!client.apiId) return;
+    try {
+      await staffApi.deleteClient(client.apiId);
+      setClients((prev) => prev.filter((c) => c.apiId !== client.apiId));
+    } catch (err) {
+      console.error("Failed to delete client", err);
+      alert("Не удалось удалить клиента");
+    }
+    setDeleteConfirm(null);
+  };
 
   return (
     <div>
@@ -249,8 +269,7 @@ export default function ClientsPage() {
           <span />
         </div>
 
-        {loading && <div className="clients-empty">Загрузка...</div>}
-        {!loading && filtered.length === 0 && (
+        {filtered.length === 0 && (
           <div className="clients-empty">Ничего не найдено</div>
         )}
 
@@ -295,6 +314,23 @@ export default function ClientsPage() {
                 </svg>
                 История
               </button>
+              <button
+                className="row-btn client-btn client-btn--delete"
+                onClick={() => setDeleteConfirm(c)}
+                style={{ color: "#c00", borderColor: "#f0d0d0" }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+              </button>
             </div>
           </div>
         ))}
@@ -308,6 +344,13 @@ export default function ClientsPage() {
           client={notesClient}
           onSave={(notes) => updateNotes(notesClient.phone, notes)}
           onClose={() => setNotesClient(null)}
+        />
+      )}
+      {deleteConfirm && (
+        <ConfirmDeleteModal
+          client={deleteConfirm}
+          onConfirm={() => handleDelete(deleteConfirm)}
+          onCancel={() => setDeleteConfirm(null)}
         />
       )}
     </div>

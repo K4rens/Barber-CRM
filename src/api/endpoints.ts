@@ -97,14 +97,12 @@ export const staffApi = {
     return data;
   },
 
-  getAnalytics: async (
-  params: AnalyticsParams
-): Promise<BarberStats> => {
-  const { data } = await http.get<BarberStats>("/staff/analytics", {
-    params,
-  })
-  return data
-},
+  getAnalytics: async (params: AnalyticsParams): Promise<BarberStats> => {
+    const { data } = await http.get<BarberStats>("/staff/analytics", {
+      params,
+    });
+    return data;
+  },
 
   getClients: async (search?: string): Promise<ApiClient[]> => {
     const { data } = await http.get<{ clients: ApiClient[] }>(
@@ -136,4 +134,8 @@ export const staffApi = {
   ): Promise<void> => {
     await http.put(`/staff/clients/${clientId}`, dto);
   },
+  deleteClient: async (clientId: string): Promise<void> => {
+    await http.delete(`/staff/clients/${clientId}`);
+  }
 };
+
