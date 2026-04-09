@@ -245,7 +245,6 @@
   gap: 8px;
 }
 
-
 .staff-btn {
   width: 100%;
   padding: 11px;
@@ -265,7 +264,6 @@
 .staff-btn--secondary:hover { border-color: #000; color: #000; }
 .staff-btn--danger { background: #fff; color: #c00; border: 1.5px solid #f0d0d0; }
 .staff-btn--danger:hover { border-color: #c00; }
-
 
 .staff-page-header {
   display: flex;
@@ -292,6 +290,9 @@
   padding-left: 4px;
 }
 
+.staff-modal__body {
+  padding: 20px;
+}
 
 @media (max-width: 1024px) {
   .staff-app {
@@ -495,7 +496,6 @@
     background: #f5f5f5;
   }
 
-  /* ── Контент ── */
   .staff-content {
     padding: 20px 16px;
     min-height: calc(100vh - 52px);
@@ -515,31 +515,6 @@
     font-size: 20px;
   }
 
-}
-
-@media (max-width: 390px) {
-  .staff-content {
-    padding: 16px 12px;
-  }
-
-  .topbar__name {
-    display: none;
-  }
-}
-
-
-@keyframes modal-in-mobile {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -12px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
-
-@media (max-width: 768px) {
   .staff-modal {
     top: 84px;
     transform: translate(-50%, 0);
@@ -560,5 +535,26 @@
     flex: 1;
     min-height: 0;
     padding: 16px 20px 20px;
+  }
+}
+
+@media (max-width: 390px) {
+  .staff-content {
+    padding: 16px 12px;
+  }
+
+  .topbar__name {
+    display: none;
+  }
+}
+
+@keyframes modal-in-mobile {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }
