@@ -18,7 +18,6 @@ const MONTHS = [
   "Декабрь",
 ];
 
-
 const navBtn: CSSProperties = {
   background: "none",
   border: "1.5px solid #000",
@@ -35,21 +34,22 @@ const navBtn: CSSProperties = {
   outline: "none",
 };
 
-
-function toDateString(date: Date): string {
+function toUTCDateString(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+function createUTCDate(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month, day));
+}
 
 interface Props {
   barberId: string | null;
   serviceId: string | null;
   selectedDate: Date | null;
-  selectedTime: string | null; 
+  selectedTime: string | null;
   onSelectDate: (d: Date) => void;
   onSelectTime: (isoTime: string) => void;
 }
-
 
 export default function BookingCalendar({
   barberId,
@@ -60,22 +60,24 @@ export default function BookingCalendar({
   onSelectTime,
 }: Props) {
   const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth());
+  const [year, setYear] = useState(today.getUTCFullYear());
+  const [month, setMonth] = useState(today.getUTCMonth());
 
-  const dateParam = selectedDate ? toDateString(selectedDate) : undefined;
+  // Дата в UTC строке для запроса
+  const dateParam = selectedDate ? toUTCDateString(selectedDate) : undefined;
   const {
     data: slotsData,
     isLoading: slotsLoading,
     isError: slotsError,
   } = useFreeSlots(barberId, dateParam, serviceId ?? undefined);
 
-
   const cells = useMemo(() => {
-    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
+    // Приводим к понедельнику как первому дню (в UTC день недели: 0 воскресенье)
+    const firstDayIndex = firstDay === 0 ? 6 : firstDay - 1;
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
     const grid: (number | null)[] = [
-      ...Array(firstDay).fill(null),
+      ...Array(firstDayIndex).fill(null),
       ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
     ];
     while (grid.length % 7 !== 0) grid.push(null);
@@ -95,17 +97,32 @@ export default function BookingCalendar({
     } else setMonth((m) => m + 1);
   };
 
-  const isPast = (d: number) =>
-    new Date(year, month, d) <
-    new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const isSelected = (d: number) =>
-    selectedDate?.getFullYear() === year &&
-    selectedDate?.getMonth() === month &&
-    selectedDate?.getDate() === d;
-  const isToday = (d: number) =>
-    today.getFullYear() === year &&
-    today.getMonth() === month &&
-    today.getDate() === d;
+  const isPast = (d: number) => {
+    const cellDate = createUTCDate(year, month, d);
+    const todayUTC = createUTCDate(
+      today.getUTCFullYear(),
+      today.getUTCMonth(),
+      today.getUTCDate(),
+    );
+    return cellDate < todayUTC;
+  };
+
+  const isSelected = (d: number) => {
+    if (!selectedDate) return false;
+    return (
+      selectedDate.getUTCFullYear() === year &&
+      selectedDate.getUTCMonth() === month &&
+      selectedDate.getUTCDate() === d
+    );
+  };
+
+  const isToday = (d: number) => {
+    return (
+      today.getUTCFullYear() === year &&
+      today.getUTCMonth() === month &&
+      today.getUTCDate() === d
+    );
+  };
 
   const freeSlots = useMemo(
     () => slotsData?.slots.filter((s) => s.status === "free") ?? [],
@@ -168,7 +185,7 @@ export default function BookingCalendar({
             <div
               key={i}
               onClick={() =>
-                day && !past && onSelectDate(new Date(year, month, day))
+                day && !past && onSelectDate(createUTCDate(year, month, day))
               }
               className={`cal-day ${day && !past && !sel ? "cal-day--hoverable" : ""}`}
               style={{

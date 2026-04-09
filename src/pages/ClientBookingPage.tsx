@@ -12,16 +12,30 @@ import {
 } from "../hooks/useBookingFlow";
 import { ApiException } from "../api/client";
 
-function formatPhone(raw: string): string {
+function cleanPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
-  const local =
-    digits.startsWith("7") || digits.startsWith("8") ? digits.slice(1) : digits;
+  if (digits.length === 0) return "";
+  let normalized = digits;
+
+  if (normalized.length === 11 && normalized[0] === "8") {
+    normalized = "7" + normalized.slice(1);
+  }
+
+  if (normalized.length === 11 && normalized[0] === "7") {
+    return "+" + normalized;
+  }
+
+  return "+" + normalized;
+}
+
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
+  if (!digits) return "+7";
   let result = "+7";
-  if (local.length === 0) return result;
-  result += " " + local.slice(0, 3);
-  if (local.length >= 4) result += " " + local.slice(3, 6);
-  if (local.length >= 7) result += "-" + local.slice(6, 8);
-  if (local.length >= 9) result += "-" + local.slice(8, 10);
+  if (digits.length > 1) result += " " + digits.slice(1, 4);
+  if (digits.length > 4) result += " " + digits.slice(4, 7);
+  if (digits.length > 7) result += "-" + digits.slice(7, 9);
+  if (digits.length > 9) result += "-" + digits.slice(9, 11);
   return result;
 }
 
@@ -83,7 +97,7 @@ export default function ClientBookingPage() {
       barber_id: barberId,
       service_id: form.serviceId!,
       client_name: form.clientName.trim(),
-      client_phone: form.clientPhone.trim(),
+      client_phone: cleanPhone(form.clientPhone), // очищенный телефон
       time_start: form.time!,
     });
   };
@@ -191,7 +205,7 @@ export default function ClientBookingPage() {
             />
             <input
               type="tel"
-              placeholder="+7 ___ ___-__-__"
+              placeholder="+7 999 123-45-67"
               value={form.clientPhone}
               onChange={(e) =>
                 setForm((f) => ({
@@ -201,7 +215,7 @@ export default function ClientBookingPage() {
               }
               onFocus={() => {
                 if (!form.clientPhone)
-                  setForm((f) => ({ ...f, clientPhone: "+7 " }));
+                  setForm((f) => ({ ...f, clientPhone: "+7" }));
               }}
               style={inputStyle}
             />

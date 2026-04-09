@@ -11,18 +11,28 @@ for (let h = 8; h < 21; h++) {
   }
 }
 
-function formatPhone(raw: string): string {
+function cleanPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
+  if (digits.length === 0) return "";
   let normalized = digits;
-  if (digits.length === 11 && digits[0] === "8") {
-    normalized = "7" + digits.slice(1);
+  if (normalized.length === 11 && normalized[0] === "8") {
+    normalized = "7" + normalized.slice(1);
+  }
+  if (normalized.length === 11 && normalized[0] === "7") {
+    return "+" + normalized;
   }
   return "+" + normalized;
 }
 
-function isValidPhone(phone: string): boolean {
-  const cleaned = phone.replace(/\D/g, "");
-  return cleaned.length >= 10 && cleaned.length <= 15;
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
+  if (!digits) return "+7 ";
+  let result = "+7";
+  if (digits.length > 1) result += " " + digits.slice(1, 4);
+  if (digits.length >= 4) result += " " + digits.slice(4, 7);
+  if (digits.length >= 7) result += "-" + digits.slice(7, 9);
+  if (digits.length >= 9) result += "-" + digits.slice(9, 11);
+  return result.trim();
 }
 
 function formatDuration(min: number): string {
@@ -61,7 +71,7 @@ export default function NewBookingModal({
   const activeServices = services.filter((s) => s.active);
 
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phoneRaw, setPhoneRaw] = useState("");
   const [date, setDate] = useState(presetDate ?? toLocalIso(new Date()));
   const [time, setTime] = useState(presetTime ?? "");
   const [service, setService] = useState("");
@@ -84,10 +94,9 @@ export default function NewBookingModal({
       setError("Введите имя клиента");
       return;
     }
-    if (!phone || !isValidPhone(phone)) {
-      setError(
-        "Введите корректный номер телефона",
-      );
+    const cleanedPhone = cleanPhone(phoneRaw);
+    if (cleanedPhone.length !== 12 || !cleanedPhone.startsWith("+7")) {
+      setError("Введите корректный номер телефона (10 цифр после +7)");
       return;
     }
     if (!date) {
@@ -124,7 +133,7 @@ export default function NewBookingModal({
     onSave({
       dayOffset,
       name: name.trim(),
-      phone: formatPhone(phone),
+      phone: cleanedPhone,
       service,
       serviceId: selectedService?.id,
       start: time,
@@ -164,12 +173,10 @@ export default function NewBookingModal({
             <input
               className="nb-field__input"
               type="tel"
-              placeholder="+7 ___ ___-__-__"
-              value={phone}
-              onFocus={() => {
-                if (!phone) setPhone("+7 ");
-              }}
-              onChange={(e) => setPhone(formatPhone(e.target.value))}
+              placeholder="+7 999 123-45-67"
+              value={formatPhone(phoneRaw)}
+              onChange={(e) => setPhoneRaw(e.target.value)}
+              maxLength={18}
             />
           </div>
 
