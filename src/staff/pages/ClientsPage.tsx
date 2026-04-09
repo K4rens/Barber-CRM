@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useStaffContext } from "../layout/StaffLayout";
 import type { Client } from "../layout/StaffLayout";
 import { staffApi } from "../../api/endpoints";
+import type { Booking as ApiBooking } from "../../api/types";
 import "../../staff-styles/clients.css";
 
-// ─── Компонент истории посещений ──────────────────────────────────────────────
-
+// Компонент истории посещений – реальный API
 function HistoryModal({
   client,
   onClose,
@@ -14,35 +14,57 @@ function HistoryModal({
   onClose: () => void;
 }) {
   const [page, setPage] = useState(0);
+  const [bookings, setBookings] = useState<ApiBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const PAGE_SIZE = 5;
 
-  // MOCK_VISITS – временные данные (в реальном проекте нужно подставить реальные данные)
-  const MOCK_VISITS: any[] = [];
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    staffApi
+      .getClientBookings(client.phone, PAGE_SIZE, page * PAGE_SIZE)
+      .then(({ bookings: items, total: totalCount }) => {
+        if (!cancelled) {
+          setBookings(items);
+          setTotal(totalCount);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load client bookings", err);
+        if (!cancelled) {
+          setBookings([]);
+          setTotal(0);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [client.phone, page]);
 
-  const today = new Date();
-  const todayStr =
-    today.getFullYear() +
-    "-" +
-    String(today.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(today.getDate()).padStart(2, "0");
-
-  const visits = MOCK_VISITS.filter(
-    (v) =>
-      v.clientId === client.id && v.status !== "pending" && v.date <= todayStr,
-  ).sort((a, b) => b.date.localeCompare(a.date));
-
-  const totalPages = Math.max(1, Math.ceil(visits.length / PAGE_SIZE));
-  const slice = visits.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const rows: (any | null)[] = [...slice];
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rows: (ApiBooking | null)[] = [...bookings];
   while (rows.length < PAGE_SIZE) rows.push(null);
 
-  const count = visits.length;
+  const count = total;
   const countLabel = count === 1 ? "визит" : count < 5 ? "визита" : "визитов";
 
   const formatDate = (iso: string) => {
     const [y, m, d] = iso.split("-");
     return `${d}.${m}.${y}`;
+  };
+
+  const formatDateTime = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleString("ru-RU", {
+      day: "numeric",
+      month: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const STATUS_LABELS: Record<string, string> = {
@@ -55,7 +77,7 @@ function HistoryModal({
   return (
     <>
       <div className="staff-overlay" onClick={onClose} />
-      <div className="staff-modal" style={{ width: 450 }}>
+      <div className="staff-modal" style={{ width: 500 }}>
         <div className="staff-modal__header">
           <span className="staff-modal__title">{client.name}</span>
           <button className="staff-modal__close" onClick={onClose}>
@@ -66,27 +88,39 @@ function HistoryModal({
           {count} {countLabel}
         </div>
         <div style={{ minHeight: 280 }}>
-          {count === 0 ? (
+          {loading && (
+            <div
+              style={{ padding: "20px", textAlign: "center", color: "#aaa" }}
+            >
+              Загрузка...
+            </div>
+          )}
+          {!loading && count === 0 && (
             <div className="history-empty">Нет посещений</div>
-          ) : (
+          )}
+          {!loading &&
             rows.map((v, i) =>
               v ? (
-                <div key={i} className="history-item">
+                <div key={v.booking_id} className="history-item">
                   <span className="history-item__date">
-                    {formatDate(v.date)}
+                    {formatDate(v.time_start.slice(0, 10))}
                   </span>
                   <span className="history-item__status">
                     {STATUS_LABELS[v.status] ?? ""}
                   </span>
-                  <span className="history-item__service">{v.service}</span>
+                  <span className="history-item__service">
+                    {v.service_name}
+                  </span>
+                  <span className="history-item__time">
+                    {formatDateTime(v.time_start)}
+                  </span>
                 </div>
               ) : (
                 <div key={i} className="history-item history-item--empty">
                   &nbsp;
                 </div>
               ),
-            )
-          )}
+            )}
         </div>
         <div className="history-pagination">
           <button
@@ -97,7 +131,7 @@ function HistoryModal({
             &#x276E;
           </button>
           <span className="history-page-label">
-            {count === 0 ? "—" : `${page + 1} / ${totalPages}`}
+            {total === 0 ? "—" : `${page + 1} / ${totalPages}`}
           </span>
           <button
             className="history-page-btn"
@@ -112,8 +146,7 @@ function HistoryModal({
   );
 }
 
-// ─── Компонент редактирования описания ────────────────────────────────────────
-
+// Компонент редактирования описания (без изменений)
 function NotesModal({
   client,
   onSave,
@@ -168,8 +201,7 @@ function NotesModal({
   );
 }
 
-// ─── Компонент подтверждения удаления ─────────────────────────────────────────
-
+// Компонент подтверждения удаления (без изменений)
 function ConfirmDeleteModal({
   client,
   onConfirm,
@@ -213,8 +245,7 @@ function ConfirmDeleteModal({
   );
 }
 
-// ─── Основная страница ────────────────────────────────────────────────────────
-
+// Основная страница
 export default function ClientsPage() {
   const { clients, setClients, updateNotes } = useStaffContext();
   const [query, setQuery] = useState("");

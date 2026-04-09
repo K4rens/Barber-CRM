@@ -1,9 +1,10 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useStaffContext } from "../../layout/StaffLayout";
+import { staffApi } from "../../../api/endpoints";
 import type { Booking, BookingStatus } from "../../types/bookings";
-import { STATUS_MAP, MOCK_BOOKINGS } from "../../types/bookings";
+import { STATUS_MAP } from "../../types/bookings";
+import type { Booking as ApiBooking } from "../../../api/types";
 
 function DrawerPortal({ children }: { children: React.ReactNode }) {
   return createPortal(
@@ -43,35 +44,68 @@ function formatDate(iso: string) {
   return `${d}.${m}.${y}`;
 }
 
+function formatDateTime(iso: string) {
+  const date = new Date(iso);
+  return date.toLocaleString("ru-RU", {
+    day: "numeric",
+    month: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function HistoryModal({
-  name,
   phone,
+  name,
   onClose,
 }: {
-  name: string;
   phone: string;
+  name: string;
   onClose: () => void;
 }) {
   const [page, setPage] = useState(0);
+  const [visits, setVisits] = useState<ApiBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const PAGE_SIZE = 5;
 
-  const visits = MOCK_BOOKINGS.filter(
-    (b) =>
-      b.name === name && b.phone === phone && b.status !== "pending" && b.date,
-  ).sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    staffApi
+      .getClientBookings(phone, PAGE_SIZE, page * PAGE_SIZE)
+      .then(({ bookings, total: totalCount }) => {
+        if (!cancelled) {
+          setVisits(bookings);
+          setTotal(totalCount);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load client bookings", err);
+        if (!cancelled) {
+          setVisits([]);
+          setTotal(0);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [phone, page]);
 
-  const totalPages = Math.max(1, Math.ceil(visits.length / PAGE_SIZE));
-  const slice = visits.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const rows: (Booking | null)[] = [...slice];
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rows: (ApiBooking | null)[] = [...visits];
   while (rows.length < PAGE_SIZE) rows.push(null);
 
-  const count = visits.length;
+  const count = total;
   const countLabel = count === 1 ? "визит" : count < 5 ? "визита" : "визитов";
 
   return (
     <DrawerPortal>
       <div className="staff-overlay" onClick={onClose} />
-      <div className="staff-modal" style={{ width: 420 }}>
+      <div className="staff-modal" style={{ width: 450 }}>
         <div className="staff-modal__header">
           <span className="staff-modal__title">{name}</span>
           <button className="staff-modal__close" onClick={onClose}>
@@ -81,28 +115,40 @@ function HistoryModal({
         <div className="history-count">
           {count} {countLabel}
         </div>
-        <div style={{ minHeight: 240 }}>
-          {count === 0 ? (
+        <div style={{ minHeight: 280 }}>
+          {loading && (
+            <div
+              style={{ padding: "20px", textAlign: "center", color: "#aaa" }}
+            >
+              Загрузка...
+            </div>
+          )}
+          {!loading && count === 0 && (
             <div className="history-empty">Нет посещений</div>
-          ) : (
+          )}
+          {!loading &&
             rows.map((v, i) =>
               v ? (
-                <div key={i} className="history-item">
+                <div key={v.booking_id} className="history-item">
                   <span className="history-item__date">
-                    {formatDate(v.date ?? "")}
+                    {formatDate(v.time_start.slice(0, 10))}
                   </span>
                   <span className="history-item__status">
                     {STATUS_VISIT_LABELS[v.status] ?? ""}
                   </span>
-                  <span className="history-item__service">{v.service}</span>
+                  <span className="history-item__service">
+                    {v.service_name}
+                  </span>
+                  <span className="history-item__time">
+                    {formatDateTime(v.time_start)}
+                  </span>
                 </div>
               ) : (
                 <div key={i} className="history-item history-item--empty">
                   &nbsp;
                 </div>
               ),
-            )
-          )}
+            )}
         </div>
         <div className="history-pagination">
           <button
@@ -113,7 +159,7 @@ function HistoryModal({
             &#x276E;
           </button>
           <span className="history-page-label">
-            {count === 0 ? "—" : `${page + 1} / ${totalPages}`}
+            {total === 0 ? "—" : `${page + 1} / ${totalPages}`}
           </span>
           <button
             className="history-page-btn"
@@ -417,8 +463,8 @@ export default function BookingDrawer({
 
             {showHistory && (
               <HistoryModal
-                name={booking.name}
                 phone={booking.phone}
+                name={booking.name}
                 onClose={() => setShowHistory(false)}
               />
             )}
