@@ -56,17 +56,7 @@ function HistoryModal({
     return `${d}.${m}.${y}`;
   };
 
-  const formatDateTime = (iso: string) => {
-    const date = new Date(iso);
-    return date.toLocaleString("ru-RU", {
-      day: "numeric",
-      month: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const STATUS_LABELS: Record<string, string> = {
+  const STATUS_VISIT_LABELS: Record<string, string> = {
     completed: "Выполнено",
     cancelled: "Отменено",
     no_show: "Не пришёл",
@@ -76,7 +66,7 @@ function HistoryModal({
   return (
     <>
       <div className="staff-overlay" onClick={onClose} />
-      <div className="staff-modal" style={{ width: 500 }}>
+      <div className="staff-modal" style={{ width: 450 }}>
         <div className="staff-modal__header">
           <span className="staff-modal__title">{client.name}</span>
           <button className="staff-modal__close" onClick={onClose}>
@@ -105,13 +95,10 @@ function HistoryModal({
                     {formatDate(v.time_start.slice(0, 10))}
                   </span>
                   <span className="history-item__status">
-                    {STATUS_LABELS[v.status] ?? ""}
+                    {STATUS_VISIT_LABELS[v.status] ?? ""}
                   </span>
                   <span className="history-item__service">
                     {v.service_name}
-                  </span>
-                  <span className="history-item__time">
-                    {formatDateTime(v.time_start)}
                   </span>
                 </div>
               ) : (

@@ -54,125 +54,134 @@ function formatDateTime(iso: string) {
   });
 }
 
-function HistoryModal({
-  phone,
-  name,
-  onClose,
-}: {
-  phone: string;
-  name: string;
-  onClose: () => void;
-}) {
-  const [page, setPage] = useState(0);
-  const [visits, setVisits] = useState<ApiBooking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const PAGE_SIZE = 5;
+ function HistoryModal({
+   phone,
+   name,
+   onClose,
+ }: {
+   phone: string;
+   name: string;
+   onClose: () => void;
+ }) {
+   const [page, setPage] = useState(0);
+   const [visits, setVisits] = useState<ApiBooking[]>([]);
+   const [loading, setLoading] = useState(true);
+   const [total, setTotal] = useState(0);
+   const PAGE_SIZE = 5;
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    staffApi
-      .getClientBookings(phone, PAGE_SIZE, page * PAGE_SIZE)
-      .then(({ bookings, total: totalCount }) => {
-        if (!cancelled) {
-          setVisits(bookings);
-          setTotal(totalCount);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load client bookings", err);
-        if (!cancelled) {
-          setVisits([]);
-          setTotal(0);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [phone, page]);
+   useEffect(() => {
+     let cancelled = false;
+     setLoading(true);
+     staffApi
+       .getClientBookings(phone, PAGE_SIZE, page * PAGE_SIZE)
+       .then(({ bookings, total: totalCount }) => {
+         if (!cancelled) {
+           setVisits(bookings);
+           setTotal(totalCount);
+         }
+       })
+       .catch((err) => {
+         console.error("Failed to load client bookings", err);
+         if (!cancelled) {
+           setVisits([]);
+           setTotal(0);
+         }
+       })
+       .finally(() => {
+         if (!cancelled) setLoading(false);
+       });
+     return () => {
+       cancelled = true;
+     };
+   }, [phone, page]);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const rows: (ApiBooking | null)[] = [...visits];
-  while (rows.length < PAGE_SIZE) rows.push(null);
+   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+   const rows: (ApiBooking | null)[] = [...visits];
+   while (rows.length < PAGE_SIZE) rows.push(null);
 
-  const count = total;
-  const countLabel = count === 1 ? "визит" : count < 5 ? "визита" : "визитов";
+   const count = total;
+   const countLabel = count === 1 ? "визит" : count < 5 ? "визита" : "визитов";
 
-  return (
-    <DrawerPortal>
-      <div className="staff-overlay" onClick={onClose} />
-      <div className="staff-modal" style={{ width: 450 }}>
-        <div className="staff-modal__header">
-          <span className="staff-modal__title">{name}</span>
-          <button className="staff-modal__close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-        <div className="history-count">
-          {count} {countLabel}
-        </div>
-        <div style={{ minHeight: 280 }}>
-          {loading && (
-            <div
-              style={{ padding: "20px", textAlign: "center", color: "#aaa" }}
-            >
-              Загрузка...
-            </div>
-          )}
-          {!loading && count === 0 && (
-            <div className="history-empty">Нет посещений</div>
-          )}
-          {!loading &&
-            rows.map((v, i) =>
-              v ? (
-                <div key={v.booking_id} className="history-item">
-                  <span className="history-item__date">
-                    {formatDate(v.time_start.slice(0, 10))}
-                  </span>
-                  <span className="history-item__status">
-                    {STATUS_VISIT_LABELS[v.status] ?? ""}
-                  </span>
-                  <span className="history-item__service">
-                    {v.service_name}
-                  </span>
-                  <span className="history-item__time">
-                    {formatDateTime(v.time_start)}
-                  </span>
-                </div>
-              ) : (
-                <div key={i} className="history-item history-item--empty">
-                  &nbsp;
-                </div>
-              ),
-            )}
-        </div>
-        <div className="history-pagination">
-          <button
-            className="history-page-btn"
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            &#x276E;
-          </button>
-          <span className="history-page-label">
-            {total === 0 ? "—" : `${page + 1} / ${totalPages}`}
-          </span>
-          <button
-            className="history-page-btn"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            &#x276F;
-          </button>
-        </div>
-      </div>
-    </DrawerPortal>
-  );
-}
+   const formatDate = (iso: string) => {
+     const [y, m, d] = iso.split("-");
+     return `${d}.${m}.${y}`;
+   };
+
+   const STATUS_VISIT_LABELS: Record<string, string> = {
+     completed: "Выполнено",
+     cancelled: "Отменено",
+     no_show: "Не пришёл",
+     pending: "Ожидает",
+   };
+
+   return (
+     <DrawerPortal>
+       <div className="staff-overlay" onClick={onClose} />
+       <div className="staff-modal" style={{ width: 420 }}>
+         <div className="staff-modal__header">
+           <span className="staff-modal__title">{name}</span>
+           <button className="staff-modal__close" onClick={onClose}>
+             ✕
+           </button>
+         </div>
+         <div className="history-count">
+           {count} {countLabel}
+         </div>
+         <div style={{ minHeight: 240 }}>
+           {loading && (
+             <div
+               style={{ padding: "20px", textAlign: "center", color: "#aaa" }}
+             >
+               Загрузка...
+             </div>
+           )}
+           {!loading && count === 0 && (
+             <div className="history-empty">Нет посещений</div>
+           )}
+           {!loading &&
+             rows.map((v, i) =>
+               v ? (
+                 <div key={v.booking_id} className="history-item">
+                   <span className="history-item__date">
+                     {formatDate(v.time_start.slice(0, 10))}
+                   </span>
+                   <span className="history-item__status">
+                     {STATUS_VISIT_LABELS[v.status] ?? ""}
+                   </span>
+                   <span className="history-item__service">
+                     {v.service_name}
+                   </span>
+                 </div>
+               ) : (
+                 <div key={i} className="history-item history-item--empty">
+                   &nbsp;
+                 </div>
+               ),
+             )}
+         </div>
+         <div className="history-pagination">
+           <button
+             className="history-page-btn"
+             disabled={page === 0}
+             onClick={() => setPage((p) => p - 1)}
+           >
+             &#x276E;
+           </button>
+           <span className="history-page-label">
+             {total === 0 ? "—" : `${page + 1} / ${totalPages}`}
+           </span>
+           <button
+             className="history-page-btn"
+             disabled={page >= totalPages - 1}
+             onClick={() => setPage((p) => p + 1)}
+           >
+             &#x276F;
+           </button>
+         </div>
+       </div>
+     </DrawerPortal>
+   );
+ }
 
 function NotesModal({
   name,
