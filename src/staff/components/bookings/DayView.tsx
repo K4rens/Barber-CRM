@@ -73,28 +73,32 @@ export default function DayView({
   const label = `${targetDate.getDate()} ${MONTHS[targetDate.getMonth()]}, ${DAYS_FULL[targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1]}`;
   const monthLabel = `${MONTHS_NOM[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
 
-  const dayStart = useMemo(() => {
-    if (dayShift?.start) return parseInt(dayShift.start.split(":")[0]);
-    return DEFAULT_DAY_START;
+  // Парсим время начала и конца с минутами (без округления)
+  const dayStartTime = useMemo(() => {
+    if (dayShift?.start) {
+      const [h, m] = dayShift.start.split(":").map(Number);
+      return { hour: h, minute: m };
+    }
+    return { hour: DEFAULT_DAY_START, minute: 0 };
   }, [dayShift]);
 
-  const dayEnd = useMemo(() => {
+  const dayEndTime = useMemo(() => {
     if (dayShift?.end) {
       const [h, m] = dayShift.end.split(":").map(Number);
-      if (h === 0 && m === 0) return 24;
-      return h;
+      return { hour: h, minute: m };
     }
-    return DEFAULT_DAY_END;
+    return { hour: DEFAULT_DAY_END, minute: 0 };
   }, [dayShift]);
 
-  const slots = useMemo(() => {
-    const s: string[] = [];
-    for (let h = dayStart; h < dayEnd; h++) {
-      for (let m = 0; m < 60; m += 15) s.push(padTime(h, m));
-    }
-    s.push(padTime(dayEnd === 24 ? 0 : dayEnd, 0));
-    return s;
-  }, [dayStart, dayEnd]);
+  const hasDayBookings = useMemo(
+    () =>
+      bookings.some(
+        (b) => b.date === targetDateIso && b.status !== "cancelled",
+      ),
+    [bookings, targetDateIso],
+  );
+  const isDayOff =
+    dayShift === null || (dayShift === undefined && !hasDayBookings);
 
   const dayBookings = useMemo(
     () =>
@@ -104,10 +108,7 @@ export default function DayView({
     [bookings, targetDateIso],
   );
 
-  const hasDayBookings = dayBookings.length > 0;
-  const isDayOff =
-    dayShift === null || (dayShift === undefined && !hasDayBookings);
-
+  // Карта занятых слотов (ключ – время начала 15-минутного интервала)
   const occupied = useMemo(() => {
     const map: Record<string, Booking> = {};
     dayBookings.forEach((b) => {
@@ -121,26 +122,42 @@ export default function DayView({
     return map;
   }, [dayBookings]);
 
+  // Генерация слотов: начинаем с точного start_time, шаг 15 минут
+  const slots = useMemo(() => {
+    if (isDayOff) return [];
+
+    const startMin = dayStartTime.hour * 60 + dayStartTime.minute;
+    const endMin = dayEndTime.hour * 60 + dayEndTime.minute;
+    if (endMin <= startMin) return [];
+
+    const slotsList: string[] = [];
+    let currentMin = startMin;
+    while (currentMin + 15 <= endMin) {
+      const h = Math.floor(currentMin / 60);
+      const m = currentMin % 60;
+      slotsList.push(padTime(h, m));
+      currentMin += 15;
+    }
+    return slotsList;
+  }, [isDayOff, dayStartTime, dayEndTime]);
+
   const getFreeSlots = (time: string): number => {
     const [h, m] = time.split(":").map(Number);
     let free = 0;
+    let currentMin = h * 60 + m;
+    const endMin = dayEndTime.hour * 60 + dayEndTime.minute;
     for (let i = 0; i < 12; i++) {
-      const total = h * 60 + m + i * 15;
-      if (total >= dayEnd * 60) break;
-      const key = padTime(Math.floor(total / 60), total % 60);
+      if (currentMin + i * 15 >= endMin) break;
+      const key = padTime(
+        Math.floor((currentMin + i * 15) / 60),
+        (currentMin + i * 15) % 60,
+      );
       if (occupied[key]) break;
       free++;
     }
     return free;
   };
 
-  const getPrevKey = (key: string) => {
-    const [h, m] = key.split(":").map(Number);
-    const total = h * 60 + m - 15;
-    if (total < 0) return null;
-    return padTime(Math.floor(total / 60), total % 60);
-  };
-  
   const isSlotPast = (timeKey: string): boolean => {
     const now = new Date();
     const [hours, minutes] = timeKey.split(":").map(Number);
@@ -148,6 +165,81 @@ export default function DayView({
     slotDateTime.setHours(hours, minutes, 0, 0);
     return slotDateTime < now;
   };
+
+  // Построение непрерывных блоков брони (для отрисовки)
+  const getBookingBlocks = () => {
+    if (!slots.length) return [];
+    const blocks: { booking: Booking; startIndex: number; endIndex: number }[] =
+      [];
+    let currentBlock: { booking: Booking; startIndex: number } | null = null;
+    for (let i = 0; i < slots.length; i++) {
+      const slotKey = slots[i];
+      const booking = occupied[slotKey];
+      if (booking) {
+        if (!currentBlock || currentBlock.booking.id !== booking.id) {
+          if (currentBlock) {
+            blocks.push({
+              booking: currentBlock.booking,
+              startIndex: currentBlock.startIndex,
+              endIndex: i - 1,
+            });
+          }
+          currentBlock = { booking, startIndex: i };
+        }
+      } else {
+        if (currentBlock) {
+          blocks.push({
+            booking: currentBlock.booking,
+            startIndex: currentBlock.startIndex,
+            endIndex: i - 1,
+          });
+          currentBlock = null;
+        }
+      }
+    }
+    if (currentBlock) {
+      blocks.push({
+        booking: currentBlock.booking,
+        startIndex: currentBlock.startIndex,
+        endIndex: slots.length - 1,
+      });
+    }
+    return blocks;
+  };
+
+  const bookingBlocks = getBookingBlocks();
+
+  if (isDayOff) {
+    return (
+      <div>
+        <div
+          style={{
+            marginBottom: 6,
+            fontSize: 11,
+            color: "#bbb",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}
+        >
+          {monthLabel}
+        </div>
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 16 }}>
+          {label}
+        </div>
+        <div
+          style={{
+            padding: "40px 0",
+            textAlign: "center",
+            color: "#bbb",
+            fontFamily: "Manrope, sans-serif",
+            fontSize: 13,
+          }}
+        >
+          Выходной день
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -165,92 +257,70 @@ export default function DayView({
       <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 16 }}>
         {label}
       </div>
+      <div className="day-view">
+        {slots.map((key, si) => {
+          const isLast = si === slots.length - 1;
+          const booking = occupied[key];
+          const block = bookingBlocks.find(
+            (b) => si >= b.startIndex && si <= b.endIndex,
+          );
+          const isFirstInBlock = block && block.startIndex === si;
 
-      {isDayOff ? (
-        <div
-          style={{
-            padding: "40px 0",
-            textAlign: "center",
-            color: "#bbb",
-            fontFamily: "Manrope, sans-serif",
-            fontSize: 13,
-          }}
-        >
-          Выходной день
-        </div>
-      ) : (
-        <div className="day-view">
-          {slots.map((key, si) => {
-            const isLast = si === slots.length - 1;
-            const booking = occupied[key];
-            const prevBooking = occupied[getPrevKey(key) ?? ""];
-            const isFirst = booking && prevBooking?.id !== booking.id;
-            const slotPast = isSlotPast(key);
-
-            return (
+          return (
+            <div
+              key={key}
+              className={`day-slot${isLast ? " day-slot--end" : ""}`}
+            >
+              <div className="day-slot__time">{key}</div>
               <div
-                key={key}
-                className={`day-slot${isLast ? " day-slot--end" : ""}`}
+                className={`day-slot__cell${booking && !isFirstInBlock ? " day-slot__cell--occupied" : ""}`}
               >
-                <div className="day-slot__time">{key}</div>
-                <div
-                  className={`day-slot__cell${booking && !isFirst ? " day-slot__cell--occupied" : ""}`}
-                >
-                  {!isLast &&
-                    isFirst &&
-                    booking &&
-                    (() => {
-                      const dur = booking.duration || 45;
-                      const [bh, bm] = booking.start.split(":").map(Number);
-                      const slotsCount = Math.min(
-                        dur / 15,
-                        (dayEnd * 60 - bh * 60 - bm) / 15,
-                      );
-                      return (
-                        <div
-                          className={`day-booking-card ${STATUS_CLASS[booking.status] || ""}`}
-                          style={{ height: slotsCount * 40 - 5 + "px" }}
-                          onClick={() => onBookingClick(booking)}
-                        >
-                          <span className="day-booking__name">
-                            {booking.name.split(" ")[0]}
-                            {booking.name.split(" ")[1]
-                              ? " " + booking.name.split(" ")[1][0] + "."
-                              : ""}
-                          </span>
-                          <span className="day-booking__service">
-                            {booking.service}
-                          </span>
-                          <span className="day-booking__meta">
-                            <span>
-                              {booking.start}
-                              {booking.end ? ` — ${booking.end}` : ""}
-                            </span>
-                          </span>
-                        </div>
-                      );
-                    })()}
-                  {!isLast && !booking && (
-                    <button
-                      className="day-slot__add"
-                      disabled={slotPast}
-                      style={{
-                        opacity: slotPast ? 0.4 : 1,
-                        cursor: slotPast ? "not-allowed" : "pointer",
-                      }}
-                      onClick={() =>
-                        onAddSlot(key, getFreeSlots(key), targetDateIso)
-                      }
-                    >
-                      +
-                    </button>
-                  )}
-                </div>
+                {!isLast && isFirstInBlock && booking && block && (
+                  <div
+                    className={`day-booking-card ${STATUS_CLASS[booking.status] || ""}`}
+                    style={{
+                      height:
+                        (block.endIndex - block.startIndex + 1) * 40 - 5 + "px",
+                    }}
+                    onClick={() => onBookingClick(booking)}
+                  >
+                    <span className="day-booking__name">
+                      {booking.name.split(" ")[0]}
+                      {booking.name.split(" ")[1]
+                        ? " " + booking.name.split(" ")[1][0] + "."
+                        : ""}
+                    </span>
+                    <span className="day-booking__service">
+                      {booking.service}
+                    </span>
+                    <span className="day-booking__meta">
+                      <span>
+                        {booking.start}
+                        {booking.end ? ` — ${booking.end}` : ""}
+                      </span>
+                    </span>
+                  </div>
+                )}
+                {!isLast && !booking && (
+                  <button
+                    className="day-slot__add"
+                    disabled={isSlotPast(key)}
+                    style={{
+                      opacity: isSlotPast(key) ? 0.4 : 1,
+                      cursor: isSlotPast(key) ? "not-allowed" : "pointer",
+                    }}
+                    onClick={() =>
+                      onAddSlot(key, getFreeSlots(key), targetDateIso)
+                    }
+                  >
+                    +
+                  </button>
+                )}
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
