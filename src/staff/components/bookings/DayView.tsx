@@ -73,7 +73,6 @@ export default function DayView({
   const label = `${targetDate.getDate()} ${MONTHS[targetDate.getMonth()]}, ${DAYS_FULL[targetDate.getDay() === 0 ? 6 : targetDate.getDay() - 1]}`;
   const monthLabel = `${MONTHS_NOM[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
 
-  // Парсим время начала и конца с минутами (без округления)
   const dayStartTime = useMemo(() => {
     if (dayShift?.start) {
       const [h, m] = dayShift.start.split(":").map(Number);
@@ -108,7 +107,6 @@ export default function DayView({
     [bookings, targetDateIso],
   );
 
-  // Карта занятых слотов (ключ – время начала 15-минутного интервала)
   const occupied = useMemo(() => {
     const map: Record<string, Booking> = {};
     dayBookings.forEach((b) => {
@@ -122,7 +120,7 @@ export default function DayView({
     return map;
   }, [dayBookings]);
 
-  // Генерация слотов: начинаем с точного start_time, шаг 15 минут
+  // Генерация слотов: последний слот заканчивается ровно в end_time
   const slots = useMemo(() => {
     if (isDayOff) return [];
 
@@ -132,11 +130,19 @@ export default function DayView({
 
     const slotsList: string[] = [];
     let currentMin = startMin;
-    while (currentMin + 15 <= endMin) {
-      const h = Math.floor(currentMin / 60);
-      const m = currentMin % 60;
-      slotsList.push(padTime(h, m));
+    while (currentMin < endMin) {
+      slotsList.push(padTime(Math.floor(currentMin / 60), currentMin % 60));
       currentMin += 15;
+    }
+    // Если последний добавленный слот не заканчивается ровно в endMin,
+    // заменяем его на слот, который начинается с округлённого вниз до 15 минут времени
+    if (slotsList.length > 0) {
+      const lastSlotMin = Math.floor(endMin / 15) * 15;
+      if (lastSlotMin > startMin && lastSlotMin + 15 > endMin) {
+        // Удаляем последний слот (он был добавлен, но его окончание > endMin)
+        slotsList.pop();
+        slotsList.push(padTime(Math.floor(lastSlotMin / 60), lastSlotMin % 60));
+      }
     }
     return slotsList;
   }, [isDayOff, dayStartTime, dayEndTime]);
@@ -166,7 +172,6 @@ export default function DayView({
     return slotDateTime < now;
   };
 
-  // Построение непрерывных блоков брони (для отрисовки)
   const getBookingBlocks = () => {
     if (!slots.length) return [];
     const blocks: { booking: Booking; startIndex: number; endIndex: number }[] =
