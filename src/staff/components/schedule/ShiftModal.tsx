@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Shift } from "../../types/schedule";
 import type { Booking } from "../../types/bookings";
-import { DAYS_FULL, START_OPTIONS, END_OPTIONS } from "../../types/schedule";
+import { DAYS_FULL } from "../../types/schedule";
 
 interface Props {
   dayIndex: number;
@@ -24,7 +24,7 @@ export default function ShiftModal({
 
   const timeToMin = (t: string) => {
     const [h, m] = t.split(":").map(Number);
-    return h === 0 && m === 0 ? 24 * 60 : h * 60 + m;
+    return h * 60 + m;
   };
 
   const handleSave = () => {
@@ -78,31 +78,23 @@ export default function ShiftModal({
           <div className="nb-row">
             <div className="nb-field">
               <label className="nb-field__label">Начало смены</label>
-              <select
+              <input
+                type="time"
                 className="nb-field__input"
                 value={start}
                 onChange={(e) => setStart(e.target.value)}
-              >
-                {START_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+                step="60" // шаг 1 минута (step="60" означает 60 секунд = 1 минута)
+              />
             </div>
             <div className="nb-field">
               <label className="nb-field__label">Конец смены</label>
-              <select
+              <input
+                type="time"
                 className="nb-field__input"
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
-              >
-                {END_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+                step="60"
+              />
             </div>
           </div>
           {error && <div className="nb-error">{error}</div>}

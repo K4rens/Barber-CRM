@@ -42,9 +42,11 @@ export default function TemplateModal({ template, onSave, onClose }: Props) {
   const handleSave = () => {
     for (let i = 0; i < 7; i++) {
       if (!days[i].off) {
-        const sh = parseInt(days[i].start);
-        const eh = days[i].end === "00:00" ? 24 : parseInt(days[i].end);
-        if (eh <= sh) {
+        const [sh, sm] = days[i].start.split(":").map(Number);
+        const [eh, em] = days[i].end.split(":").map(Number);
+        const startMin = sh * 60 + sm;
+        const endMin = eh * 60 + em;
+        if (endMin <= startMin) {
           setError(`Конец смены должен быть позже начала для ${DAYS_FULL[i]}`);
           return;
         }
@@ -77,6 +79,7 @@ export default function TemplateModal({ template, onSave, onClose }: Props) {
                   value={day.start}
                   disabled={day.off}
                   onChange={(e) => updateDay(i, { start: e.target.value })}
+                  step="60"
                 />
                 <span style={{ color: "#aaa" }}>—</span>
                 <input
@@ -85,6 +88,7 @@ export default function TemplateModal({ template, onSave, onClose }: Props) {
                   value={day.end}
                   disabled={day.off}
                   onChange={(e) => updateDay(i, { end: e.target.value })}
+                  step="60"
                 />
               </div>
               <label className="off-checkbox">
