@@ -377,3 +377,31 @@
     width: auto;
   }
 }
+
+.time-select {
+  font-family: "Manrope", sans-serif;
+  font-size: 13px;
+  color: #000;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+ 
+}
+
+.time-select:focus {
+  border-color: #000;
+}
+
+.time-select:hover {
+  border-color: #aaa;
+}
+
+.time-select:focus-visible {
+  outline: none;
+}

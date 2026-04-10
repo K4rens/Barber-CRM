@@ -200,6 +200,7 @@
   width: 420px;
   max-width: calc(100vw - 40px);
   animation: modal-in 0.2s ease;
+  
 }
 
 .staff-modal--sm {
