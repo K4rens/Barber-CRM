@@ -702,3 +702,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+.week-day-head--past {
+  opacity: 0.5;
+}
+.day-col--past {
+  background: #f5f5f5;
+  opacity: 0.7;
+}
+.day-col__past-label {
+  font-size: 10px;
+  color: #aaa;
+  text-align: center;
+  padding: 8px;
+}

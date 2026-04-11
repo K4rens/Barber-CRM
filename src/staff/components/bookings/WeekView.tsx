@@ -1,5 +1,3 @@
-// src/staff/components/bookings/WeekView.tsx
-
 import { useMemo } from "react";
 import type { Booking } from "../../types/bookings";
 import {
@@ -18,6 +16,13 @@ interface Props {
   schedule: ScheduleState;
   onDayClick: (dayIndex: number) => void;
   onBookingClick: (booking: Booking) => void;
+}
+
+// Хелпер для проверки, прошёл ли день
+function isPastDate(date: Date): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date < today;
 }
 
 export default function WeekView({
@@ -85,20 +90,21 @@ export default function WeekView({
         {monthLabel}
       </div>
       <div className="week-calendar">
-        {/* Заголовки дней */}
+
         <div className="week-calendar__head">
           {days.map((d, i) => {
             const isToday = d.getTime() === today.getTime();
+            const isPast = isPastDate(d);
             const weekScheduleForDay = schedule[weekOffset] ?? {};
             const shift = weekScheduleForDay[i];
-            // undefined = не задано (используем DEFAULT), null = выходной, Shift = рабочий
             const hasBookings = dayBookings(days[i]).length > 0;
             const isOff =
-              shift === null || (shift === undefined && !hasBookings);
+              !isPast &&
+              (shift === null || (shift === undefined && !hasBookings));
             return (
               <div
                 key={i}
-                className={`week-day-head${isToday ? " week-day-head--today" : ""}${isOff ? " week-day-head--off" : ""}`}
+                className={`week-day-head${isToday ? " week-day-head--today" : ""}${isPast ? " week-day-head--past" : ""}${isOff ? " week-day-head--off" : ""}`}
                 style={{ cursor: "pointer" }}
                 title="Перейти к дню"
                 onClick={() => onDayClick(i)}
@@ -110,23 +116,26 @@ export default function WeekView({
           })}
         </div>
 
-        {/* Тело */}
+
         <div className="week-calendar__body">
           {days.map((_, i) => {
             const isToday = days[i].getTime() === today.getTime();
+            const isPast = isPastDate(days[i]);
             const weekScheduleForDay = schedule[weekOffset] ?? {};
             const shift = weekScheduleForDay[i];
-            // undefined = не задано (используем DEFAULT), null = выходной, Shift = рабочий
             const hasBookings = dayBookings(days[i]).length > 0;
             const isOff =
-              shift === null || (shift === undefined && !hasBookings);
+              !isPast &&
+              (shift === null || (shift === undefined && !hasBookings));
             const bList = dayBookings(days[i]);
             return (
               <div
                 key={i}
-                className={`day-col${isToday ? " day-col--today" : ""}${isOff ? " day-col--off" : ""}`}
+                className={`day-col${isToday ? " day-col--today" : ""}${isPast ? " day-col--past" : ""}${isOff ? " day-col--off" : ""}`}
               >
-                {isOff ? (
+                {isPast ? (
+                  <div className="day-col__past-label">Прошедший день</div>
+                ) : isOff ? (
                   <div className="day-col__off-label">Выходной</div>
                 ) : (
                   bList.map((b) => (
@@ -151,7 +160,6 @@ export default function WeekView({
         </div>
       </div>
 
-      {/* Лейбл недели снизу для навигации */}
       <div style={{ display: "none" }} id="week-label-data">
         {weekLabel}
       </div>
