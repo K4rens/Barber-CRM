@@ -33,7 +33,6 @@ function toLocalIso(d: Date): string {
   );
 }
 
-// --- Хелперы для загрузки расписания (аналог SchedulePage) ---
 function toIsoWeek(weekStart: Date): string {
   const d = new Date(weekStart);
   d.setHours(0, 0, 0, 0);
@@ -76,7 +75,6 @@ function apiDaysToShifts(
   }
   return result;
 }
-// --- Конец хелперов ---
 
 function slotsToBookings(slots: Slot[], iso: string): Booking[] {
   const bookingsMap = new Map<
@@ -86,6 +84,7 @@ function slotsToBookings(slots: Slot[], iso: string): Booking[] {
       clientName: string;
       clientPhone: string;
       serviceName: string;
+      bookingStatus: BookingStatus;
       start: Date;
       end: Date;
     }
@@ -103,6 +102,7 @@ function slotsToBookings(slots: Slot[], iso: string): Booking[] {
           clientName: slot.booking.client_name,
           clientPhone: slot.booking.client_phone,
           serviceName: slot.booking.service_name,
+          bookingStatus: (slot.booking.status ?? "pending") as BookingStatus,
           start,
           end,
         });
@@ -147,7 +147,7 @@ function slotsToBookings(slots: Slot[], iso: string): Booking[] {
       start,
       end,
       duration,
-      status: "pending" as BookingStatus,
+      status: data.bookingStatus,
       date: iso,
     });
   }
@@ -234,10 +234,8 @@ export default function BookingsPage() {
   >(undefined);
   const [showNewBooking, setShowNewBooking] = useState(false);
 
-  // --- ФИКС: загружаем расписание если его ещё нет в контексте ---
   const loadScheduleWeek = useCallback(
     async (offset: number) => {
-      // Если расписание для этой недели уже загружено — не грузим повторно
       if (schedule[offset] !== undefined) return;
 
       const ws = getWeekStart(offset);
@@ -248,20 +246,17 @@ export default function BookingsPage() {
         setSchedule((prev) => ({ ...prev, [offset]: shifts }));
       } catch (err) {
         console.error("BookingsPage: Failed to load schedule", err);
-        // Ставим пустой объект чтобы не пытаться грузить повторно
         setSchedule((prev) => ({ ...prev, [offset]: prev[offset] ?? {} }));
       }
     },
     [schedule, setSchedule],
   );
 
-  // Загружаем расписание для текущей недели в режиме "неделя"
   useEffect(() => {
     if (view !== "week") return;
     loadScheduleWeek(weekOffset);
   }, [view, weekOffset, loadScheduleWeek]);
 
-  // Загружаем расписание для нужной недели в режиме "день"
   useEffect(() => {
     if (view !== "day") return;
 
@@ -283,7 +278,6 @@ export default function BookingsPage() {
 
     loadScheduleWeek(targetWeekOffset);
   }, [view, dayOffset, loadScheduleWeek]);
-  // --- Конец фикса ---
 
   useEffect(() => {
     if (view !== "day") return;

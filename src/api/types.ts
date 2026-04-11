@@ -26,6 +26,7 @@ export interface SlotBooking {
   client_name: string;
   client_phone: string;
   service_name: string;
+  status?: "pending" | "completed" | "cancelled" | "no_show";
 }
 
 export type PartOfDay = "am" | "pm";
