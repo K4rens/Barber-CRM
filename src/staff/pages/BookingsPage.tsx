@@ -380,6 +380,15 @@ export default function BookingsPage() {
     }
     handleStatusChange(id, status);
     setActiveBooking((prev) => (prev?.id === id ? { ...prev, status } : prev));
+    // Инвалидируем дату в кеше, чтобы при следующем показе этой даты
+    // слоты перезагрузились с сервера с актуальным статусом
+    if (booking?.date) {
+      setLoadedDates((prev) => {
+        const next = new Set(prev);
+        next.delete(booking.date);
+        return next;
+      });
+    }
   };
 
   const onDelete = async (id: number) => {
@@ -390,6 +399,14 @@ export default function BookingsPage() {
       } catch {}
     }
     setBookings((prev) => prev.filter((b) => b.id !== id));
+    // Инвалидируем дату в кеше после удаления
+    if (booking?.date) {
+      setLoadedDates((prev) => {
+        const next = new Set(prev);
+        next.delete(booking.date);
+        return next;
+      });
+    }
   };
 
   const label = navLabel(view, weekOffset, dayOffset, monthOffset);
