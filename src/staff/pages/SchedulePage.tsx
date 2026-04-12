@@ -228,31 +228,7 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            className="btn btn--outline"
-            onClick={() => setShowTemplates((v) => !v)}
-          >
-            {showTemplates ? "Скрыть шаблоны" : "Мои шаблоны"}
-          </button>
-          {showTemplates && (
-            <button
-              className="btn btn--primary"
-              onClick={() => setEditingTemplate(null)}
-            >
-              + Создать шаблон
-            </button>
-          )}
-        </div>
-
+      <div style={{ marginBottom: 16 }}>
         {compactMode !== null && (
           <div className="compact-toggle">
             <span className="compact-toggle__label">Показ слотов:</span>
@@ -362,6 +338,28 @@ export default function SchedulePage() {
       )}
 
       <div className="schedule-templates-section">
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            marginBottom: showTemplates ? 16 : 0,
+          }}
+        >
+          <button
+            className="btn btn--outline"
+            onClick={() => setShowTemplates((v) => !v)}
+          >
+            {showTemplates ? "Скрыть шаблоны" : "Мои шаблоны"}
+          </button>
+          {showTemplates && (
+            <button
+              className="btn btn--primary"
+              onClick={() => setEditingTemplate(null)}
+            >
+              + Создать шаблон
+            </button>
+          )}
+        </div>
         {showTemplates && (
           <div className="templates-list">
             {templates.length === 0 && (
