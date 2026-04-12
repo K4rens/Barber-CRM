@@ -26,6 +26,7 @@ export interface SlotBooking {
   client_name: string;
   client_phone: string;
   service_name: string;
+  service_id: string;
   status?: "pending" | "completed" | "cancelled" | "no_show";
 }
 
@@ -39,8 +40,6 @@ export interface ScheduleDay {
   end_time: string;
   part_of_day: PartOfDay;
 }
-
-// Booking
 
 export type BookingStatus = "pending" | "completed" | "cancelled" | "no_show";
 

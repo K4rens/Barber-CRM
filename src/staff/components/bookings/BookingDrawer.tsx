@@ -289,13 +289,21 @@ function EditBookingModal({
   const { services: contextServices } = useStaffContext();
   const activeServices = contextServices.filter((s) => s.active);
 
-  const [selectedServiceId, setSelectedServiceId] = useState(
-    booking.serviceId ?? "",
-  );
+  // Если бэкенд не вернул service_id — ищем по названию услуги
+  const resolvedServiceId =
+    booking.serviceId ||
+    activeServices.find(
+      (s) => s.name.toLowerCase() === booking.service.toLowerCase(),
+    )?.id ||
+    "";
+
+  const [selectedServiceId, setSelectedServiceId] = useState(resolvedServiceId);
   const [selectedDate, setSelectedDate] = useState(booking.date ?? "");
-  const [selectedTime, setSelectedTime] = useState("");
+  // FIX: инициализируем текущим временем записи, а не пустой строкой
+  const [selectedTime, setSelectedTime] = useState(booking.start ?? "");
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsLoaded, setSlotsLoaded] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -304,11 +312,20 @@ function EditBookingModal({
     (s) => s.id === selectedServiceId,
   );
 
+  const slotToLabel = (sl: Slot) => {
+    const d = new Date(sl.time_start);
+    return (
+      String(d.getUTCHours()).padStart(2, "0") +
+      ":" +
+      String(d.getUTCMinutes()).padStart(2, "0")
+    );
+  };
+
   useEffect(() => {
     if (!selectedDate || !barberId) return;
     setLoadingSlots(true);
-    setSelectedTime("");
     setSlots([]);
+    setSlotsLoaded(false);
 
     const dur =
       activeServices.find((s) => s.id === selectedServiceId)?.duration ?? 0;
@@ -326,8 +343,9 @@ function EditBookingModal({
           return false;
         });
 
+        let finalSlots: Slot[];
         if (dur > 0 && selectedServiceId) {
-          const filtered = available.filter((sl) => {
+          finalSlots = available.filter((sl) => {
             const start = new Date(sl.time_start).getTime();
             const slotsNeeded = Math.ceil(dur / 15);
             for (let i = 0; i < slotsNeeded; i++) {
@@ -347,13 +365,26 @@ function EditBookingModal({
             }
             return true;
           });
-          setSlots(filtered);
         } else {
-          setSlots(available);
+          finalSlots = available;
         }
+
+        setSlots(finalSlots);
+        // FIX: сохраняем текущее время если оно есть среди доступных слотов,
+        // иначе сбрасываем только если дата/услуга изменились пользователем
+        setSelectedTime((prev) => {
+          const exists = finalSlots.some((sl) => slotToLabel(sl) === prev);
+          return exists ? prev : "";
+        });
       })
-      .catch(() => setSlots([]))
-      .finally(() => setLoadingSlots(false));
+      .catch(() => {
+        setSlots([]);
+        setSelectedTime("");
+      })
+      .finally(() => {
+        setLoadingSlots(false);
+        setSlotsLoaded(true);
+      });
   }, [selectedDate, selectedServiceId, barberId]);
 
   const handleSave = async () => {
@@ -396,15 +427,6 @@ function EditBookingModal({
     }
   };
 
-  const slotLabel = (sl: Slot) => {
-    const d = new Date(sl.time_start);
-    return (
-      String(d.getUTCHours()).padStart(2, "0") +
-      ":" +
-      String(d.getUTCMinutes()).padStart(2, "0")
-    );
-  };
-
   const todayIso = new Date().toISOString().slice(0, 10);
 
   return (
@@ -438,7 +460,11 @@ function EditBookingModal({
               <select
                 className="nb-field__input"
                 value={selectedServiceId}
-                onChange={(e) => setSelectedServiceId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedServiceId(e.target.value);
+                  // При смене услуги сбрасываем время — слоты пересчитаются
+                  setSelectedTime("");
+                }}
               >
                 <option value="">— выбрать —</option>
                 {activeServices.map((s) => (
@@ -458,7 +484,11 @@ function EditBookingModal({
                 type="date"
                 min={todayIso}
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  // При смене даты сбрасываем время
+                  setSelectedTime("");
+                }}
               />
             </div>
             <div className="nb-field">
@@ -487,7 +517,7 @@ function EditBookingModal({
                 >
                   <option value="">— выбрать —</option>
                   {slots.map((sl) => {
-                    const label = slotLabel(sl);
+                    const label = slotToLabel(sl);
                     return (
                       <option key={sl.time_start} value={label}>
                         {label}
