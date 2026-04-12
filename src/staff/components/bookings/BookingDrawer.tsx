@@ -5,7 +5,7 @@ import { staffApi } from "../../../api/endpoints";
 import { tokenStorage } from "../../../api/client";
 import type { Booking, BookingStatus } from "../../types/bookings";
 import { STATUS_MAP } from "../../types/bookings";
-import type { Booking as ApiBooking, Service, Slot } from "../../../api/types";
+import type { Booking as ApiBooking, Slot } from "../../../api/types";
 
 function DrawerPortal({ children }: { children: React.ReactNode }) {
   return createPortal(
@@ -47,21 +47,6 @@ const STATUS_VISIT_LABELS: Record<string, string> = {
   no_show: "Не пришёл",
   pending: "Ожидает",
 };
-
-function formatDate(iso: string) {
-  const [y, m, d] = iso.split("-");
-  return `${d}.${m}.${y}`;
-}
-
-function formatDateTime(iso: string) {
-  const date = new Date(iso);
-  return date.toLocaleString("ru-RU", {
-    day: "numeric",
-    month: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function HistoryModal({
   phone,
@@ -241,11 +226,49 @@ function NotesModal({
   );
 }
 
-function formatDuration(min: number): string {
-  if (min < 60) return `${min} мин`;
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return m ? `${h} ч ${m} мин` : `${h} ч`;
+function ConfirmModal({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <DrawerPortal>
+      <div className="staff-overlay" onClick={onCancel} />
+      <div className="staff-modal" style={{ width: 340 }}>
+        <div className="staff-modal__header">
+          <span className="staff-modal__title">Подтверждение</span>
+          <button className="staff-modal__close" onClick={onCancel}>
+            ✕
+          </button>
+        </div>
+        <div className="nb-form">
+          <p
+            style={{ margin: 0, fontSize: 14, color: "#444", lineHeight: 1.5 }}
+          >
+            Вы уверены? Запись будет убрана из расписания.
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="drawer-btn drawer-btn--cancel"
+              style={{ flex: 1 }}
+              onClick={onConfirm}
+            >
+              Да, уверен
+            </button>
+            <button
+              className="drawer-btn drawer-btn--change"
+              style={{ flex: 1 }}
+              onClick={onCancel}
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      </div>
+    </DrawerPortal>
+  );
 }
 
 function EditBookingModal({
@@ -277,7 +300,6 @@ function EditBookingModal({
   const [saving, setSaving] = useState(false);
 
   const barberId = tokenStorage.getBarberId() ?? "";
-
   const selectedService = activeServices.find(
     (s) => s.id === selectedServiceId,
   );
@@ -305,14 +327,10 @@ function EditBookingModal({
         });
 
         if (dur > 0 && selectedServiceId) {
-          const availableStarts = new Set(available.map((s) => s.time_start));
           const filtered = available.filter((sl) => {
             const start = new Date(sl.time_start).getTime();
             const slotsNeeded = Math.ceil(dur / 15);
             for (let i = 0; i < slotsNeeded; i++) {
-              const checkTime = new Date(
-                start + i * 15 * 60 * 1000,
-              ).toISOString();
               const match = allSlots.find(
                 (s) =>
                   Math.abs(
@@ -353,19 +371,16 @@ function EditBookingModal({
     }
     setError("");
     setSaving(true);
-
     try {
       const [y, mo, day] = selectedDate.split("-").map(Number);
       const [h, m] = selectedTime.split(":").map(Number);
       const timeStart = new Date(Date.UTC(y, mo - 1, day, h, m)).toISOString();
-
       const dur = selectedService?.duration ?? 45;
       const endTotal = h * 60 + m + dur;
       const endStr =
         String(Math.floor(endTotal / 60)).padStart(2, "0") +
         ":" +
         String(endTotal % 60).padStart(2, "0");
-
       onSave(
         selectedServiceId,
         selectedService?.name ?? booking.service,
@@ -383,9 +398,11 @@ function EditBookingModal({
 
   const slotLabel = (sl: Slot) => {
     const d = new Date(sl.time_start);
-    const hh = String(d.getUTCHours()).padStart(2, "0");
-    const mm = String(d.getUTCMinutes()).padStart(2, "0");
-    return `${hh}:${mm}`;
+    return (
+      String(d.getUTCHours()).padStart(2, "0") +
+      ":" +
+      String(d.getUTCMinutes()).padStart(2, "0")
+    );
   };
 
   const todayIso = new Date().toISOString().slice(0, 10);
@@ -400,7 +417,6 @@ function EditBookingModal({
             ✕
           </button>
         </div>
-
         <div className="nb-form">
           <div className="nb-field">
             <label className="nb-field__label">Клиент</label>
@@ -512,16 +528,20 @@ export default function BookingDrawer({
   const [showHistory, setShowHistory] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<null | (() => void)>(null);
 
   const prevIdRef = React.useRef(booking?.id);
   if (prevIdRef.current !== booking?.id) {
     prevIdRef.current = booking?.id;
     setShowStatusPicker(false);
-    setShowDeleteConfirm(false);
     setShowEdit(false);
+    setConfirmAction(null);
   }
+
+  const requestConfirm = (action: () => void) => {
+    setConfirmAction(() => action);
+  };
 
   const isOpen = !!booking;
   const isPending = booking?.status === "pending";
@@ -620,53 +640,46 @@ export default function BookingDrawer({
                   <button
                     className="drawer-btn drawer-btn--noshow"
                     style={{ flex: 1, padding: "7px", fontSize: "10px" }}
-                    onClick={() => onStatusChange(booking.id, "no_show")}
+                    onClick={() =>
+                      requestConfirm(() => {
+                        onDelete?.(booking.id);
+                        onClose();
+                      })
+                    }
                   >
                     Не пришёл
                   </button>
                   <button
                     className="drawer-btn drawer-btn--noshow"
                     style={{ flex: 1, padding: "7px", fontSize: "10px" }}
-                    onClick={() => onStatusChange(booking.id, "cancelled")}
+                    onClick={() =>
+                      requestConfirm(() => {
+                        onDelete?.(booking.id);
+                        onClose();
+                      })
+                    }
                   >
                     Отменить
                   </button>
                 </div>
-                {!showDeleteConfirm ? (
-                  <button
-                    className="drawer-btn drawer-btn--danger"
-                    style={{
-                      fontSize: "10px",
-                      padding: "7px",
-                      color: "#c00",
-                      background: "#fff",
-                      border: "1.5px solid #f0d0d0",
-                    }}
-                    onClick={() => setShowDeleteConfirm(true)}
-                  >
-                    Удалить запись
-                  </button>
-                ) : (
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      className="drawer-btn drawer-btn--cancel"
-                      style={{ flex: 1, padding: "7px", fontSize: "10px" }}
-                      onClick={() => {
-                        onDelete?.(booking.id);
-                        onClose();
-                      }}
-                    >
-                      Да, удалить
-                    </button>
-                    <button
-                      className="drawer-btn drawer-btn--change"
-                      style={{ flex: 1, padding: "7px", fontSize: "10px" }}
-                      onClick={() => setShowDeleteConfirm(false)}
-                    >
-                      Отмена
-                    </button>
-                  </div>
-                )}
+                <button
+                  className="drawer-btn"
+                  style={{
+                    fontSize: "10px",
+                    padding: "7px",
+                    color: "#c00",
+                    background: "#fff",
+                    border: "1.5px solid #f0d0d0",
+                  }}
+                  onClick={() =>
+                    requestConfirm(() => {
+                      onDelete?.(booking.id);
+                      onClose();
+                    })
+                  }
+                >
+                  Удалить запись
+                </button>
               </div>
             )}
 
@@ -680,41 +693,24 @@ export default function BookingDrawer({
                     >
                       Изменить статус
                     </button>
-                    {!showDeleteConfirm ? (
-                      <button
-                        className="drawer-btn"
-                        style={{
-                          fontSize: "10px",
-                          padding: "7px",
-                          color: "#c00",
-                          background: "#fff",
-                          border: "1.5px solid #f0d0d0",
-                        }}
-                        onClick={() => setShowDeleteConfirm(true)}
-                      >
-                        Удалить запись
-                      </button>
-                    ) : (
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          className="drawer-btn drawer-btn--cancel"
-                          style={{ flex: 1, padding: "7px", fontSize: "10px" }}
-                          onClick={() => {
-                            onDelete?.(booking.id);
-                            onClose();
-                          }}
-                        >
-                          Да, удалить
-                        </button>
-                        <button
-                          className="drawer-btn drawer-btn--change"
-                          style={{ flex: 1, padding: "7px", fontSize: "10px" }}
-                          onClick={() => setShowDeleteConfirm(false)}
-                        >
-                          Отмена
-                        </button>
-                      </div>
-                    )}
+                    <button
+                      className="drawer-btn"
+                      style={{
+                        fontSize: "10px",
+                        padding: "7px",
+                        color: "#c00",
+                        background: "#fff",
+                        border: "1.5px solid #f0d0d0",
+                      }}
+                      onClick={() =>
+                        requestConfirm(() => {
+                          onDelete?.(booking.id);
+                          onClose();
+                        })
+                      }
+                    >
+                      Удалить запись
+                    </button>
                   </>
                 ) : (
                   <>
@@ -724,7 +720,15 @@ export default function BookingDrawer({
                     {STATUS_LABELS.map((s) => (
                       <button
                         key={s.value}
-                        className={`drawer-btn drawer-btn--${s.value === "completed" ? "complete" : s.value === "cancelled" ? "cancel" : s.value === "no_show" ? "noshow" : "change"}`}
+                        className={`drawer-btn drawer-btn--${
+                          s.value === "completed"
+                            ? "complete"
+                            : s.value === "cancelled"
+                              ? "cancel"
+                              : s.value === "no_show"
+                                ? "noshow"
+                                : "change"
+                        }`}
                         onClick={() => {
                           onStatusChange(booking.id, s.value);
                           setShowStatusPicker(false);
@@ -736,6 +740,16 @@ export default function BookingDrawer({
                   </>
                 )}
               </div>
+            )}
+
+            {confirmAction && (
+              <ConfirmModal
+                onConfirm={() => {
+                  confirmAction();
+                  setConfirmAction(null);
+                }}
+                onCancel={() => setConfirmAction(null)}
+              />
             )}
 
             {showEdit && (
