@@ -151,6 +151,7 @@ export const staffApi = {
     });
     return data;
   },
+
   getServices: async (includeInactive = true): Promise<Service[]> => {
     const { data } = await http.get<{ services: Service[] }>(
       "/staff/services",
@@ -159,5 +160,31 @@ export const staffApi = {
       },
     );
     return data.services;
+  },
+
+  updateBooking: async (
+    bookingId: string,
+    dto: { service_id?: string; time_start?: string },
+  ): Promise<Booking> => {
+    const { data } = await http.put<Booking>(
+      `/staff/bookings/${bookingId}`,
+      dto,
+    );
+    return data;
+  },
+
+  getFreeSlots: async (
+    barberId: string,
+    date: string,
+    serviceId?: string,
+  ): Promise<{ date: string; slots: Slot[] }> => {
+    const { data } = await http.get<{
+      barber_id: string;
+      date: string;
+      slots: Slot[];
+    }>(`/barbers/${barberId}/free-slots`, {
+      params: { date, service_id: serviceId },
+    });
+    return { date: data.date, slots: data.slots };
   },
 };

@@ -380,8 +380,6 @@ export default function BookingsPage() {
     }
     handleStatusChange(id, status);
     setActiveBooking((prev) => (prev?.id === id ? { ...prev, status } : prev));
-    // Инвалидируем дату в кеше, чтобы при следующем показе этой даты
-    // слоты перезагрузились с сервера с актуальным статусом
     if (booking?.date) {
       setLoadedDates((prev) => {
         const next = new Set(prev);
@@ -399,13 +397,65 @@ export default function BookingsPage() {
       } catch {}
     }
     setBookings((prev) => prev.filter((b) => b.id !== id));
-    // Инвалидируем дату в кеше после удаления
     if (booking?.date) {
       setLoadedDates((prev) => {
         const next = new Set(prev);
         next.delete(booking.date);
         return next;
       });
+    }
+  };
+
+  const onUpdate = async (
+    id: number,
+    serviceId: string,
+    serviceName: string,
+    timeStart: string,
+    start: string,
+    end: string,
+  ) => {
+    const booking = bookings.find((b) => b.id === id);
+    if (!booking?.apiId) return;
+
+    try {
+      await staffApi.updateBooking(booking.apiId, {
+        service_id: serviceId,
+        time_start: timeStart,
+      });
+
+      if (booking.date) {
+        setLoadedDates((prev) => {
+          const next = new Set(prev);
+          next.delete(booking.date!);
+          return next;
+        });
+      }
+
+      const newDate = timeStart.slice(0, 10);
+
+      if (newDate !== booking.date) {
+        setLoadedDates((prev) => {
+          const next = new Set(prev);
+          next.delete(newDate);
+          return next;
+        });
+      }
+
+      const updatedBooking: Booking = {
+        ...booking,
+        service: serviceName,
+        serviceId,
+        start,
+        end,
+        date: newDate,
+      };
+
+      setBookings((prev) =>
+        prev.map((b) => (b.id === id ? updatedBooking : b)),
+      );
+      setActiveBooking(updatedBooking);
+    } catch (err) {
+      console.error("Failed to update booking", err);
     }
   };
 
@@ -507,6 +557,7 @@ export default function BookingsPage() {
         onClose={() => setActiveBooking(null)}
         onStatusChange={onStatusChange}
         onDelete={onDelete}
+        onUpdate={onUpdate}
       />
 
       {showNewBooking && (
