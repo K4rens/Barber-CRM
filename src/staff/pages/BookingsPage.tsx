@@ -373,7 +373,7 @@ export default function BookingsPage() {
 
   const onStatusChange = async (id: number, status: BookingStatus) => {
     const booking = bookings.find((b) => b.id === id);
-    if (booking?.apiId && status !== "pending") {
+    if (booking?.apiId) {
       try {
         await http.patch(`/staff/bookings/${booking.apiId}`, { status });
       } catch {}
