@@ -18,7 +18,6 @@ interface Props {
   onBookingClick: (booking: Booking) => void;
 }
 
-// Хелпер для проверки, прошёл ли день
 function isPastDate(date: Date): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -90,7 +89,6 @@ export default function WeekView({
         {monthLabel}
       </div>
       <div className="week-calendar">
-
         <div className="week-calendar__head">
           {days.map((d, i) => {
             const isToday = d.getTime() === today.getTime();
@@ -99,8 +97,7 @@ export default function WeekView({
             const shift = weekScheduleForDay[i];
             const hasBookings = dayBookings(days[i]).length > 0;
             const isOff =
-              !isPast &&
-              (shift === null || (shift === undefined && !hasBookings));
+              shift === null || (shift === undefined && !hasBookings);
             return (
               <div
                 key={i}
@@ -116,24 +113,47 @@ export default function WeekView({
           })}
         </div>
 
-
         <div className="week-calendar__body">
           {days.map((_, i) => {
             const isToday = days[i].getTime() === today.getTime();
             const isPast = isPastDate(days[i]);
             const weekScheduleForDay = schedule[weekOffset] ?? {};
             const shift = weekScheduleForDay[i];
-            const hasBookings = dayBookings(days[i]).length > 0;
+            const bList = dayBookings(days[i]);
+            const hasBookings = bList.length > 0;
+
             const isOff =
               !isPast &&
               (shift === null || (shift === undefined && !hasBookings));
-            const bList = dayBookings(days[i]);
+
+            const isPastOff = isPast && shift === null;
+            const isPastWithBookings = isPast && hasBookings;
+            const isPastEmpty = isPast && !isPastOff && !hasBookings;
+
             return (
               <div
                 key={i}
-                className={`day-col${isToday ? " day-col--today" : ""}${isPast ? " day-col--past" : ""}${isOff ? " day-col--off" : ""}`}
+                className={`day-col${isToday ? " day-col--today" : ""}${isPast ? " day-col--past" : ""}${isOff || isPastOff ? " day-col--off" : ""}`}
               >
-                {isPast ? (
+                {isPastOff ? (
+                  <div className="day-col__off-label">Выходной</div>
+                ) : isPastWithBookings ? (
+                  bList.map((b) => (
+                    <div
+                      key={b.id}
+                      className={`booking-card ${STATUS_CLASS[b.status] || ""}`}
+                      onClick={() => onBookingClick(b)}
+                    >
+                      <span className="booking-card__name">
+                        {shortName(b.name)}
+                      </span>
+                      <span className="booking-card__service">{b.service}</span>
+                      <span className="booking-card__bottom">
+                        <span className="booking-card__time">{b.start}</span>
+                      </span>
+                    </div>
+                  ))
+                ) : isPastEmpty ? (
                   <div className="day-col__past-label">Прошедший день</div>
                 ) : isOff ? (
                   <div className="day-col__off-label">Выходной</div>
